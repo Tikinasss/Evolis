@@ -23,24 +23,10 @@ AI Business Rescue is a hackathon-ready full-stack web app that analyzes compani
 ## Project Structure
 
 ```text
-ai-business-rescue/
-|
-|-- frontend/
-|   |-- src/
-|   |   |-- components/
-|   |   |-- pages/
-|   |   |-- context/
-|   |   |-- api/
-|   |   `-- main.jsx
-|   `-- package.json
-|
+.
 |-- backend/
-|   |-- server.js
-|   |-- routes/
-|   |-- services/
-|   |-- middleware/
-|   `-- package.json
-|
+|-- frontend/
+|-- LICENSE
 `-- README.md
 ```
 
@@ -107,7 +93,56 @@ npm run dev
 
 Open `http://localhost:5173`.
 
-## 5. Test Login, Roles, and Analysis
+## 5. Deploy on Vercel
+
+Deploy backend and frontend as two separate Vercel projects.
+
+### 5.1 Deploy Backend (Vercel Project #1)
+
+- Create a new Vercel project with root directory: `backend`
+- Framework preset: `Other`
+- Build/Output settings: keep defaults (routing is handled by `backend/vercel.json`)
+
+Set these environment variables in Vercel (Project Settings -> Environment Variables):
+
+- `JWT_SECRET`
+- `AWS_REGION`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `NOVA_MODEL_ID` (optional, default: `amazon.nova-lite-v1:0`)
+
+After deployment, note the backend URL, for example:
+
+```text
+https://your-backend-project.vercel.app
+```
+
+Health check:
+
+```text
+https://your-backend-project.vercel.app/api/health
+```
+
+### 5.2 Deploy Frontend (Vercel Project #2)
+
+- Create a second Vercel project with root directory: `frontend`
+- Framework preset: `Vite`
+
+Set frontend environment variable:
+
+```env
+VITE_API_URL=https://your-backend-project.vercel.app/api
+```
+
+Redeploy frontend after setting `VITE_API_URL`.
+
+### 5.3 Important Notes for Vercel
+
+- Backend runs as serverless functions on Vercel.
+- App data is in-memory (`backend/data/db.js`), so it resets on cold starts/redeploys.
+- PDF uploads should stay reasonably small due to serverless limits.
+
+## 6. Test Login, Roles, and Analysis
 
 1. Register users with each role (`employee`, `company`, `personnel`).
 2. Login and open Dashboard.
@@ -167,7 +202,7 @@ Expected JSON response:
 }
 ```
 
-## Hackathon Notes
+## 7. Hackathon Notes
 
 - Data is currently stored in-memory for simplicity.
 - Use a persistent database (DynamoDB, PostgreSQL, etc.) for production.
