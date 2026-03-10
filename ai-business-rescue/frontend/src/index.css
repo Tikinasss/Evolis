@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(34, 197, 94, 0.2), transparent 35%),
+    radial-gradient(circle at 85% 0%, rgba(22, 101, 52, 0.15), transparent 25%),
+    #f3f4f6;
+}
+
+.card-surface {
+  @apply rounded-2xl border border-green-100 bg-white shadow-panel;
+}
+
+.section-title {
+  @apply text-lg font-semibold text-rescue-dark;
+}
