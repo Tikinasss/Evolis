@@ -69,6 +69,16 @@ export async function loginUser(payload) {
   return handleResponse(response);
 }
 
+export async function sendSupportMessage(payload) {
+  const response = await fetch(`${API_URL}/support/messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(response);
+}
+
 export async function analyzeBusiness(payload, token) {
   const formData = new FormData();
   formData.append("companyName", payload.companyName);

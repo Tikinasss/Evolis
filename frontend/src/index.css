@@ -94,6 +94,55 @@ body {
   backdrop-filter: blur(4px);
 }
 
+.support-category-pill {
+  border: 1px solid rgba(134, 239, 172, 0.45);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.68);
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #166534;
+  width: fit-content;
+}
+
+.support-form {
+  border: 1px solid rgba(134, 239, 172, 0.5);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 14px 34px rgba(22, 101, 52, 0.12);
+  padding: 1.2rem;
+}
+
+.support-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #166534;
+}
+
+.support-field input,
+.support-field select,
+.support-field textarea {
+  border: 1px solid rgba(134, 239, 172, 0.65);
+  border-radius: 0.65rem;
+  padding: 0.62rem 0.75rem;
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.support-field input:focus,
+.support-field select:focus,
+.support-field textarea:focus {
+  border-color: rgba(22, 163, 74, 0.95);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
 .home-grid-overlay {
   position: absolute;
   inset: 0;

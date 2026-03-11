@@ -5,6 +5,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import Partners from "./pages/Partners";
 import Sponsors from "./pages/Sponsors";
+import Support from "./pages/Support";
 import Terms from "./pages/Terms";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -18,6 +19,7 @@ function App() {
     (!isAuthenticated && location.pathname === "/") ||
     location.pathname === "/partners" ||
     location.pathname === "/sponsors" ||
+    location.pathname === "/support" ||
     location.pathname === "/terms";
 
   if (initializing) {
@@ -50,6 +52,7 @@ function App() {
           <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Home />} />
           <Route path="/partners" element={<Partners />} />
           <Route path="/sponsors" element={<Sponsors />} />
+          <Route path="/support" element={<Support />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
           <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />} />
