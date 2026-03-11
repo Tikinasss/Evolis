@@ -11,7 +11,7 @@ function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
 
   return (
-    <header className="border-b border-green-100 bg-white/90 backdrop-blur">
+    <header className="bg-white/90 shadow-sm backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <Link to="/" className="text-xl font-bold tracking-tight text-rescue-dark">
           AI Business Rescue
