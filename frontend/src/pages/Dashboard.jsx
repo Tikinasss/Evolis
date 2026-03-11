@@ -126,14 +126,21 @@ function Dashboard() {
     setIsTutorialOpen(true);
   };
 
+  const isActiveTarget = (target) => isTutorialOpen && TUTORIAL_STEPS[tutorialStep]?.target === target;
+
   const highlightClass = (target) =>
-    isTutorialOpen && TUTORIAL_STEPS[tutorialStep]?.target === target
-      ? "ring-2 ring-rescue-primary ring-offset-2 ring-offset-rescue-gray"
+    isActiveTarget(target)
+      ? "relative z-[60] rounded-2xl bg-white ring-2 ring-rescue-primary ring-offset-2 ring-offset-rescue-gray shadow-2xl"
       : "";
+
+  const dimClass = (target) => (isTutorialOpen && !isActiveTarget(target) ? "opacity-55 transition-opacity" : "");
 
   return (
     <section className="space-y-6">
-      <header id="tutorial-header" className={`card-surface p-6 ${highlightClass("header")}`}>
+      <header
+        id="tutorial-header"
+        className={`card-surface p-6 transition-all ${highlightClass("header")} ${dimClass("header")}`}
+      >
         <p className="text-sm text-slate-600">Signed in as</p>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-bold text-rescue-dark">
@@ -152,15 +159,15 @@ function Dashboard() {
       {error && <p className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700">{error}</p>}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div id="tutorial-form" className={highlightClass("form")}>
+        <div id="tutorial-form" className={`transition-all ${highlightClass("form")} ${dimClass("form")}`}>
           <BusinessForm onSubmit={handleSubmit} loading={loading} />
         </div>
-        <div id="tutorial-result" className={highlightClass("result")}>
+        <div id="tutorial-result" className={`transition-all ${highlightClass("result")} ${dimClass("result")}`}>
           <ResultCard result={result} />
         </div>
       </div>
 
-      <div id="tutorial-history" className={highlightClass("history")}>
+      <div id="tutorial-history" className={`transition-all ${highlightClass("history")} ${dimClass("history")}`}>
         <UserDashboard role={user?.role} analyses={analyses} />
       </div>
 

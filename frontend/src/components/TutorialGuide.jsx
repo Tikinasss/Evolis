@@ -8,10 +8,10 @@ function TutorialGuide({ isOpen, steps, currentStep, onNext, onPrev, onSkip, onF
   const isLast = currentStep === steps.length - 1;
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-slate-900/30" />
+    <div className="pointer-events-none fixed inset-0 z-40">
+      <div className="absolute inset-0 bg-slate-900/35" />
 
-      <section className="pointer-events-auto absolute bottom-4 left-4 right-4 mx-auto max-w-xl rounded-2xl border border-green-200 bg-white p-5 shadow-2xl sm:bottom-6 sm:left-auto sm:right-6 sm:w-[28rem]">
+      <section className="pointer-events-auto absolute bottom-4 left-4 right-4 z-[80] mx-auto max-w-xl rounded-2xl border border-green-200 bg-white p-5 shadow-2xl sm:bottom-6 sm:left-auto sm:right-6 sm:w-[28rem]">
         <p className="text-xs font-semibold uppercase tracking-wide text-rescue-dark">Tutorial</p>
         <h3 className="mt-1 text-lg font-bold text-slate-900">{step.title}</h3>
         <p className="mt-2 text-sm text-slate-700">{step.description}</p>
