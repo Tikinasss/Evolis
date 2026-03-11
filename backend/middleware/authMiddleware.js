@@ -1,6 +1,29 @@
 const jwt = require("jsonwebtoken");
 
-function authenticateToken(req, res, next) {
+const { query } = require("../data/postgres");
+const { getFirebaseAdmin } = require("../services/firebaseAdmin");
+
+async function resolveUserFromDatabase({ firebaseUid, email }) {
+  if (!firebaseUid && !email) {
+    return null;
+  }
+
+  const lookup = await query(
+    `
+    SELECT id, name, email, role, firebase_uid AS "firebaseUid"
+    FROM users
+    WHERE ($1::text IS NOT NULL AND firebase_uid = $1)
+       OR ($2::text IS NOT NULL AND email = $2)
+    ORDER BY CASE WHEN firebase_uid = $1 THEN 0 ELSE 1 END
+    LIMIT 1
+    `,
+    [firebaseUid || null, email || null]
+  );
+
+  return lookup.rowCount > 0 ? lookup.rows[0] : null;
+}
+
+async function authenticateToken(req, res, next) {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(" ")[1];
 
@@ -9,8 +32,37 @@ function authenticateToken(req, res, next) {
   }
 
   try {
+    const firebaseAdmin = getFirebaseAdmin();
+
+    if (firebaseAdmin) {
+      try {
+        const decodedFirebase = await firebaseAdmin.auth().verifyIdToken(token);
+        const dbUser = await resolveUserFromDatabase({
+          firebaseUid: decodedFirebase.uid,
+          email: decodedFirebase.email ? decodedFirebase.email.toLowerCase() : null,
+        });
+
+        if (!dbUser) {
+          return res.status(403).json({ message: "User profile is not registered for this Firebase account." });
+        }
+
+        req.user = {
+          id: dbUser.id,
+          name: dbUser.name,
+          email: dbUser.email,
+          role: dbUser.role,
+          firebaseUid: dbUser.firebaseUid,
+        };
+        req.authProvider = "firebase";
+        return next();
+      } catch (_firebaseError) {
+        // Fall through to legacy JWT verification for backward compatibility.
+      }
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret");
     req.user = decoded;
+    req.authProvider = "jwt";
     return next();
   } catch (error) {
     return res.status(403).json({ message: "Invalid or expired token." });

@@ -13,14 +13,16 @@ function Navbar() {
   return (
     <header className="bg-white/90 shadow-sm backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <Link to="/" className="text-xl font-bold tracking-tight text-rescue-dark">
+        <Link to={isAuthenticated ? "/dashboard" : "/"} className="text-xl font-bold tracking-tight text-rescue-dark">
           AI Business Rescue
         </Link>
 
         <nav className="flex items-center gap-2">
-          <NavLink to="/" className={linkClass}>
-            Home
-          </NavLink>
+          {!isAuthenticated && (
+            <NavLink to="/" className={linkClass}>
+              Home
+            </NavLink>
+          )}
 
           {!isAuthenticated && (
             <>

@@ -7,6 +7,9 @@ function UserDashboard({
   selectedAnalysisId,
   onSelectAnalysis,
   onUpdateStatus,
+  canUpdateStatus,
+  pagination,
+  onPageChange,
 }) {
   const roleTitle =
     role === "personnel"
@@ -115,6 +118,7 @@ function UserDashboard({
                   <select
                     value={status}
                     onChange={(e) => onUpdateStatus(item.id, e.target.value)}
+                    disabled={!canUpdateStatus(item)}
                     className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-700"
                   >
                     <option value="draft">Draft</option>
@@ -127,6 +131,30 @@ function UserDashboard({
             </div>
           );
         })}
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+        <p className="text-xs text-slate-500">
+          Page {pagination.page} / {pagination.totalPages} - {pagination.total} analyses
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onPageChange(Math.max(1, pagination.page - 1))}
+            disabled={pagination.page <= 1}
+            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={() => onPageChange(Math.min(pagination.totalPages, pagination.page + 1))}
+            disabled={pagination.page >= pagination.totalPages}
+            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );

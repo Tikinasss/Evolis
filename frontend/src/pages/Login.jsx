@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import LoginForm from "../components/LoginForm";
-import { loginUser } from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import { firebaseAuth } from "../firebase";
 
 function Login() {
   const [loading, setLoading] = useState(false);
@@ -14,8 +15,8 @@ function Login() {
     setLoading(true);
     setError("");
     try {
-      const data = await loginUser(payload);
-      auth.login(data);
+      await signInWithEmailAndPassword(firebaseAuth, payload.email, payload.password);
+      await auth.completeFirebaseSession();
       navigate("/dashboard");
     } catch (err) {
       setError(err.message);

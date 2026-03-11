@@ -68,6 +68,7 @@ function Dashboard() {
     dateTo: "",
     status: "",
   });
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 8, total: 0, totalPages: 1 });
 
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
@@ -87,12 +88,20 @@ function Dashboard() {
     }, 2800);
   };
 
-  const loadAnalyses = async (activeFilters = filters) => {
+  const loadAnalyses = async (activeFilters = filters, page = pagination.page) => {
     setLoadingAnalyses(true);
     try {
-      const data = await getAnalyses(token, activeFilters);
+      const data = await getAnalyses(token, {
+        ...activeFilters,
+        page,
+        pageSize: pagination.pageSize,
+      });
       const nextAnalyses = data.analyses || [];
       setAnalyses(nextAnalyses);
+      setPagination((prev) => ({
+        ...prev,
+        ...(data.pagination || prev),
+      }));
 
       if (nextAnalyses.length > 0) {
         const exists = nextAnalyses.some((item) => item.id === selectedAnalysisId);
@@ -197,14 +206,18 @@ function Dashboard() {
   const handleFiltersChange = async (nextPatch) => {
     const nextFilters = { ...filters, ...nextPatch };
     setFilters(nextFilters);
-    await loadAnalyses(nextFilters);
+    await loadAnalyses(nextFilters, 1);
+  };
+
+  const handlePageChange = async (nextPage) => {
+    await loadAnalyses(filters, nextPage);
   };
 
   const handleStatusChange = async (analysisId, status) => {
     try {
       await updateAnalysisStatus(token, analysisId, status);
       pushToast("Status updated", "success");
-      await loadAnalyses();
+      await loadAnalyses(filters, pagination.page);
     } catch (statusError) {
       pushToast(statusError.message || "Failed to update status", "error");
     }
@@ -292,6 +305,41 @@ function Dashboard() {
 
   const isActiveTarget = (target) => isTutorialOpen && TUTORIAL_STEPS[tutorialStep]?.target === target;
 
+  const canUpdateStatus = (analysisItem) => {
+    if (user?.role === "personnel") {
+      return true;
+    }
+    if (user?.role === "company") {
+      return analysisItem.ownerUserId === user.id;
+    }
+    return false;
+  };
+
+  const canManageChecklist =
+    user?.role === "personnel" || (user?.role === "company" && selectedAnalysis?.ownerUserId === user.id);
+  const canWriteNotes = canManageChecklist;
+
+  const trendData = [...healthTrend].sort((a, b) => new Date(a.day) - new Date(b.day));
+  const chartPoints = (() => {
+    if (!trendData.length) {
+      return "";
+    }
+
+    const w = 420;
+    const h = 140;
+    const maxScore = Math.max(...trendData.map((p) => p.avg_score), 100);
+    const minScore = Math.min(...trendData.map((p) => p.avg_score), 0);
+    const range = Math.max(1, maxScore - minScore);
+
+    return trendData
+      .map((point, idx) => {
+        const x = trendData.length === 1 ? 0 : (idx / (trendData.length - 1)) * w;
+        const y = h - ((point.avg_score - minScore) / range) * h;
+        return `${x},${y}`;
+      })
+      .join(" ");
+  })();
+
   const highlightClass = (target) =>
     isActiveTarget(target)
       ? "relative z-[60] rounded-2xl bg-white ring-2 ring-rescue-primary ring-offset-2 ring-offset-rescue-gray shadow-2xl"
@@ -346,15 +394,36 @@ function Dashboard() {
 
       <div className="card-surface p-6">
         <h3 className="section-title">Business Health Score Trend</h3>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {healthTrend.length === 0 && <p className="text-sm text-slate-500">No trend data yet.</p>}
-          {healthTrend.map((point) => (
-            <div key={point.day} className="rounded-xl border border-slate-200 bg-white p-3">
-              <p className="text-xs text-slate-500">{new Date(point.day).toLocaleDateString()}</p>
-              <p className="mt-1 text-xl font-bold text-rescue-dark">{point.avg_score}</p>
-              <p className="text-xs text-slate-500">{point.total} analyses</p>
-            </div>
-          ))}
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+          {trendData.length === 0 && <p className="text-sm text-slate-500">No trend data yet.</p>}
+
+          {trendData.length > 0 && (
+            <>
+              <svg viewBox="0 0 420 140" className="h-40 w-full overflow-visible">
+                <line x1="0" y1="140" x2="420" y2="140" stroke="#cbd5e1" strokeWidth="1" />
+                <polyline fill="none" stroke="#16a34a" strokeWidth="3" points={chartPoints} />
+                {trendData.map((point, idx) => {
+                  const x = trendData.length === 1 ? 0 : (idx / (trendData.length - 1)) * 420;
+                  const maxScore = Math.max(...trendData.map((p) => p.avg_score), 100);
+                  const minScore = Math.min(...trendData.map((p) => p.avg_score), 0);
+                  const range = Math.max(1, maxScore - minScore);
+                  const y = 140 - ((point.avg_score - minScore) / range) * 140;
+
+                  return (
+                    <circle key={point.day} cx={x} cy={y} r="4" fill="#166534">
+                      <title>
+                        {new Date(point.day).toLocaleDateString()} - score {point.avg_score} ({point.total} analyses)
+                      </title>
+                    </circle>
+                  );
+                })}
+              </svg>
+              <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                <span>{new Date(trendData[0].day).toLocaleDateString()}</span>
+                <span>{new Date(trendData[trendData.length - 1].day).toLocaleDateString()}</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -368,6 +437,9 @@ function Dashboard() {
           selectedAnalysisId={selectedAnalysisId}
           onSelectAnalysis={setSelectedAnalysisId}
           onUpdateStatus={handleStatusChange}
+          canUpdateStatus={canUpdateStatus}
+          pagination={pagination}
+          onPageChange={handlePageChange}
         />
       </div>
 
@@ -427,16 +499,21 @@ function Dashboard() {
 
           {selectedAnalysis && (
             <>
+              {!canManageChecklist && (
+                <p className="mt-3 text-xs text-slate-500">Only company owner or personnel can edit checklist.</p>
+              )}
               <div className="mt-3 flex gap-2">
                 <input
                   value={newActionTitle}
                   onChange={(e) => setNewActionTitle(e.target.value)}
                   placeholder="Add action item"
+                  disabled={!canManageChecklist}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                 />
                 <button
                   type="button"
                   onClick={handleAddAction}
+                  disabled={!canManageChecklist}
                   className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
                 >
                   Add
@@ -449,6 +526,7 @@ function Dashboard() {
                     <input
                       type="checkbox"
                       checked={item.completed}
+                      disabled={!canManageChecklist}
                       onChange={() => handleToggleAction(item)}
                     />
                     <span className={item.completed ? "text-sm text-slate-400 line-through" : "text-sm text-slate-700"}>
@@ -468,17 +546,22 @@ function Dashboard() {
 
         {selectedAnalysis && (
           <>
+            {!canWriteNotes && (
+              <p className="mt-3 text-xs text-slate-500">Only company owner or personnel can add notes.</p>
+            )}
             <div className="mt-3 flex flex-col gap-2 sm:flex-row">
               <textarea
                 value={newNote}
                 onChange={(e) => setNewNote(e.target.value)}
                 rows={3}
                 placeholder="Write a team note"
+                disabled={!canWriteNotes}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
               />
               <button
                 type="button"
                 onClick={handleCreateNote}
+                disabled={!canWriteNotes}
                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
               >
                 Add note

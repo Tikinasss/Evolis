@@ -7,6 +7,64 @@ const { authenticateToken } = require("../middleware/authMiddleware");
 const router = express.Router();
 const VALID_ROLES = ["employee", "company", "personnel"];
 
+router.post("/auth/firebase/register", authenticateToken, async (req, res) => {
+  try {
+    if (req.authProvider !== "firebase") {
+      return res.status(400).json({ message: "Firebase token is required." });
+    }
+
+    const { name, role } = req.body;
+    const normalizedEmail = (req.user.email || "").toLowerCase();
+
+    if (!name || !normalizedEmail || !role) {
+      return res.status(400).json({ message: "Name, email, and role are required." });
+    }
+
+    if (!VALID_ROLES.includes(role)) {
+      return res.status(400).json({ message: "Invalid role selected." });
+    }
+
+    const existing = await query(
+      `
+      SELECT id, name, email, role, firebase_uid AS "firebaseUid"
+      FROM users
+      WHERE firebase_uid = $1 OR email = $2
+      LIMIT 1
+      `,
+      [req.user.firebaseUid, normalizedEmail]
+    );
+
+    if (existing.rowCount > 0) {
+      const current = existing.rows[0];
+      const updated = await query(
+        `
+        UPDATE users
+        SET name = $1,
+            firebase_uid = COALESCE(firebase_uid, $2)
+        WHERE id = $3
+        RETURNING id, name, email, role, firebase_uid AS "firebaseUid"
+        `,
+        [name, req.user.firebaseUid, current.id]
+      );
+
+      return res.json({ user: updated.rows[0] });
+    }
+
+    const created = await query(
+      `
+      INSERT INTO users (name, email, password_hash, role, firebase_uid)
+      VALUES ($1, $2, 'firebase_managed', $3, $4)
+      RETURNING id, name, email, role, firebase_uid AS "firebaseUid"
+      `,
+      [name, normalizedEmail, role, req.user.firebaseUid]
+    );
+
+    return res.status(201).json({ user: created.rows[0] });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to register Firebase profile.", error: error.message });
+  }
+});
+
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -98,8 +156,26 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/me", authenticateToken, (req, res) => {
-  return res.json({ user: req.user });
+router.get("/me", authenticateToken, async (req, res) => {
+  try {
+    const profile = await query(
+      `
+      SELECT id, name, email, role, firebase_uid AS "firebaseUid"
+      FROM users
+      WHERE id = $1
+      LIMIT 1
+      `,
+      [req.user.id]
+    );
+
+    if (profile.rowCount === 0) {
+      return res.status(404).json({ message: "User profile not found." });
+    }
+
+    return res.json({ user: profile.rows[0] });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to load user profile.", error: error.message });
+  }
 });
 
 module.exports = router;

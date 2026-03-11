@@ -37,6 +37,29 @@ export async function registerUser(payload) {
   return handleResponse(response);
 }
 
+export async function registerFirebaseProfile(payload, token) {
+  const response = await fetch(`${API_URL}/auth/firebase/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...withAuth(token),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(response);
+}
+
+export async function getMe(token) {
+  const response = await fetch(`${API_URL}/me`, {
+    headers: {
+      ...withAuth(token),
+    },
+  });
+
+  return handleResponse(response);
+}
+
 export async function loginUser(payload) {
   const response = await fetch(`${API_URL}/login`, {
     method: "POST",

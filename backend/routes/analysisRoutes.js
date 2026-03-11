@@ -47,7 +47,7 @@ function mapAnalysisRow(row) {
   };
 }
 
-function buildAnalysesFilterQuery(req) {
+function buildAnalysesFilter(req) {
   const { role, id } = req.user;
   const { risk, industry, q, dateFrom, dateTo, status } = req.query;
 
@@ -90,14 +90,7 @@ function buildAnalysesFilterQuery(req) {
   }
 
   const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
-  const text = `
-    SELECT *
-    FROM analyses
-    ${whereSql}
-    ORDER BY created_at DESC
-  `;
-
-  return { text, params };
+  return { whereSql, params };
 }
 
 async function getAnalysisById(analysisId) {
@@ -119,6 +112,26 @@ function canAccessAnalysis(user, analysis) {
   }
 
   return true;
+}
+
+function canManageAnalysis(user, analysis) {
+  if (!analysis) {
+    return false;
+  }
+
+  if (user.role === "personnel") {
+    return true;
+  }
+
+  if (user.role === "company") {
+    return analysis.owner_user_id === user.id;
+  }
+
+  return false;
+}
+
+function canWriteNote(user, analysis) {
+  return canManageAnalysis(user, analysis);
 }
 
 router.post(
@@ -220,25 +233,61 @@ router.post(
 
 router.get("/analyses", authenticateToken, async (req, res) => {
   try {
-    const { text, params } = buildAnalysesFilterQuery(req);
-    const result = await query(text, params);
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const pageSize = Math.min(50, Math.max(1, Number(req.query.pageSize) || 10));
+
+    const { whereSql, params } = buildAnalysesFilter(req);
+
+    const countResult = await query(
+      `
+      SELECT COUNT(*)::int AS total
+      FROM analyses
+      ${whereSql}
+      `,
+      params
+    );
+
+    const total = countResult.rows[0]?.total || 0;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const normalizedPage = Math.min(page, totalPages);
+    const offset = (normalizedPage - 1) * pageSize;
+
+    const listParams = [...params, pageSize, offset];
+    const result = await query(
+      `
+      SELECT *
+      FROM analyses
+      ${whereSql}
+      ORDER BY created_at DESC
+      LIMIT $${listParams.length - 1}
+      OFFSET $${listParams.length}
+      `,
+      listParams
+    );
+
     const analyses = result.rows.map(mapAnalysisRow);
+    const payload =
+      req.user.role === "employee"
+        ? analyses.map((item) => ({
+            id: item.id,
+            companyName: item.companyName,
+            industry: item.industry,
+            status: item.status,
+            healthScore: item.healthScore,
+            createdAt: item.createdAt,
+            analysis: item.analysis,
+          }))
+        : analyses;
 
-    if (req.user.role === "employee") {
-      return res.json({
-        analyses: analyses.map((item) => ({
-          id: item.id,
-          companyName: item.companyName,
-          industry: item.industry,
-          status: item.status,
-          healthScore: item.healthScore,
-          createdAt: item.createdAt,
-          analysis: item.analysis,
-        })),
-      });
-    }
-
-    return res.json({ analyses });
+    return res.json({
+      analyses: payload,
+      pagination: {
+        page: normalizedPage,
+        pageSize,
+        total,
+        totalPages,
+      },
+    });
   } catch (error) {
     return res.status(500).json({ message: "Failed to load analyses.", error: error.message });
   }
@@ -262,8 +311,8 @@ router.get("/analyses/summary/health-trend", authenticateToken, async (req, res)
       FROM analyses
       ${where}
       GROUP BY day
-      ORDER BY day DESC
-      LIMIT 14
+      ORDER BY day ASC
+      LIMIT 30
       `,
       params
     );
@@ -284,8 +333,12 @@ router.patch("/analyses/:analysisId/status", authenticateToken, async (req, res)
     }
 
     const analysis = await getAnalysisById(analysisId);
-    if (!canAccessAnalysis(req.user, analysis)) {
-      return res.status(403).json({ message: "Forbidden." });
+    if (!analysis) {
+      return res.status(404).json({ message: "Analysis not found." });
+    }
+
+    if (!canManageAnalysis(req.user, analysis)) {
+      return res.status(403).json({ message: "Only company owner or personnel can change status." });
     }
 
     const updated = await query("UPDATE analyses SET status = $1 WHERE id = $2 RETURNING *", [status, analysisId]);
@@ -354,8 +407,12 @@ router.get("/analyses/:analysisId/action-items", authenticateToken, async (req, 
 router.post("/analyses/:analysisId/action-items", authenticateToken, async (req, res) => {
   try {
     const analysis = await getAnalysisById(req.params.analysisId);
-    if (!canAccessAnalysis(req.user, analysis)) {
-      return res.status(403).json({ message: "Forbidden." });
+    if (!analysis) {
+      return res.status(404).json({ message: "Analysis not found." });
+    }
+
+    if (!canManageAnalysis(req.user, analysis)) {
+      return res.status(403).json({ message: "Only company owner or personnel can manage checklist." });
     }
 
     const { title } = req.body;
@@ -380,6 +437,26 @@ router.post("/analyses/:analysisId/action-items", authenticateToken, async (req,
 
 router.patch("/action-items/:itemId", authenticateToken, async (req, res) => {
   try {
+    const itemLookup = await query(
+      `
+      SELECT id, analysis_id AS "analysisId", title, completed, created_at AS "createdAt", updated_at AS "updatedAt"
+      FROM analysis_action_items
+      WHERE id = $1
+      `,
+      [req.params.itemId]
+    );
+
+    if (itemLookup.rowCount === 0) {
+      return res.status(404).json({ message: "Action item not found." });
+    }
+
+    const currentItem = itemLookup.rows[0];
+    const analysis = await getAnalysisById(currentItem.analysisId);
+
+    if (!canManageAnalysis(req.user, analysis)) {
+      return res.status(403).json({ message: "Only company owner or personnel can manage checklist." });
+    }
+
     const { completed } = req.body;
     const updated = await query(
       `
@@ -391,15 +468,6 @@ router.patch("/action-items/:itemId", authenticateToken, async (req, res) => {
       `,
       [Boolean(completed), req.params.itemId]
     );
-
-    if (updated.rowCount === 0) {
-      return res.status(404).json({ message: "Action item not found." });
-    }
-
-    const analysis = await getAnalysisById(updated.rows[0].analysisId);
-    if (!canAccessAnalysis(req.user, analysis)) {
-      return res.status(403).json({ message: "Forbidden." });
-    }
 
     return res.json({ item: updated.rows[0] });
   } catch (error) {
@@ -433,7 +501,11 @@ router.get("/analyses/:analysisId/notes", authenticateToken, async (req, res) =>
 router.post("/analyses/:analysisId/notes", authenticateToken, async (req, res) => {
   try {
     const analysis = await getAnalysisById(req.params.analysisId);
-    if (!canAccessAnalysis(req.user, analysis)) {
+    if (!analysis) {
+      return res.status(404).json({ message: "Analysis not found." });
+    }
+
+    if (!canWriteNote(req.user, analysis)) {
       return res.status(403).json({ message: "Forbidden." });
     }
 

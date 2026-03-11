@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import RegisterForm from "../components/RegisterForm";
-import { registerUser } from "../api/client";
+import { registerFirebaseProfile } from "../api/client";
+import { useAuth } from "../context/AuthContext";
+import { firebaseAuth } from "../firebase";
 
 function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
+  const auth = useAuth();
 
   const handleRegister = async (payload) => {
     setLoading(true);
@@ -15,9 +19,21 @@ function Register() {
     setSuccess("");
 
     try {
-      await registerUser(payload);
-      setSuccess("Registration successful. You can now login.");
-      setTimeout(() => navigate("/login"), 700);
+      const credential = await createUserWithEmailAndPassword(firebaseAuth, payload.email, payload.password);
+      await updateProfile(credential.user, { displayName: payload.name });
+      const idToken = await credential.user.getIdToken();
+
+      await registerFirebaseProfile(
+        {
+          name: payload.name,
+          role: payload.role,
+        },
+        idToken
+      );
+
+      await auth.completeFirebaseSession();
+      setSuccess("Registration successful.");
+      setTimeout(() => navigate("/dashboard"), 700);
     } catch (err) {
       setError(err.message);
     } finally {
