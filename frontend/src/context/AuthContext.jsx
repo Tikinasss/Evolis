@@ -4,6 +4,7 @@ import { getMe } from "../api/client";
 import { firebaseAuth } from "../firebase";
 
 const AuthContext = createContext(null);
+const MIN_LOADER_MS = 1400;
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem("abr_token"));
@@ -55,24 +56,46 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
+    const initStartedAt = Date.now();
+    let finalizeTimer = null;
+
+    const finishInitializing = () => {
+      const elapsed = Date.now() - initStartedAt;
+      const remaining = Math.max(0, MIN_LOADER_MS - elapsed);
+
+      if (remaining === 0) {
+        setInitializing(false);
+        return;
+      }
+
+      finalizeTimer = setTimeout(() => {
+        setInitializing(false);
+      }, remaining);
+    };
+
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser) => {
       if (!firebaseUser) {
         setToken(null);
         setUser(null);
         localStorage.removeItem("abr_token");
         localStorage.removeItem("abr_user");
-        setInitializing(false);
+        finishInitializing();
         return;
       }
 
       try {
         await completeFirebaseSession();
       } finally {
-        setInitializing(false);
+        finishInitializing();
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (finalizeTimer) {
+        clearTimeout(finalizeTimer);
+      }
+    };
   }, []);
 
   const value = useMemo(
