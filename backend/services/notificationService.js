@@ -41,6 +41,35 @@ async function sendHighRiskNotification({ companyName, riskLevel, recipientEmail
   });
 }
 
+async function sendSupportMessage({ name, email, subject, category, message }) {
+  const sender = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const supportRecipient = process.env.SUPPORT_EMAIL || process.env.ALERT_EMAIL;
+  const client = getTransporter();
+
+  if (!client || !sender || !supportRecipient) {
+    return false;
+  }
+
+  await client.sendMail({
+    from: sender,
+    to: supportRecipient,
+    replyTo: email,
+    subject: `[Support] ${subject}`,
+    text: [
+      "New support request",
+      `Name: ${name}`,
+      `Email: ${email}`,
+      `Category: ${category}`,
+      "",
+      "Message:",
+      message,
+    ].join("\n"),
+  });
+
+  return true;
+}
+
 module.exports = {
   sendHighRiskNotification,
+  sendSupportMessage,
 };
