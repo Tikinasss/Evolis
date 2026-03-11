@@ -23,46 +23,75 @@ body {
   @apply text-lg font-semibold text-rescue-dark;
 }
 
-.home-hero {
-  background:
-    radial-gradient(circle at 12% 12%, rgba(34, 197, 94, 0.22), transparent 30%),
-    radial-gradient(circle at 86% 14%, rgba(22, 101, 52, 0.2), transparent 30%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 253, 244, 0.9));
-  border: 1px solid rgba(134, 239, 172, 0.5);
+.home-hero-xl {
+  --cursor-x: 50%;
+  --cursor-y: 50%;
+  background: linear-gradient(130deg, #f0fdf4, #dcfce7, #bbf7d0, #ecfeff);
+  background-size: 250% 250%;
+  border: 1px solid rgba(134, 239, 172, 0.45);
+  animation: heroGradientShift 12s ease-in-out infinite;
 }
 
-.home-blob {
+.home-grid-overlay {
   position: absolute;
-  z-index: 0;
-  filter: blur(12px);
-  opacity: 0.7;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(22, 101, 52, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22, 101, 52, 0.06) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.9), transparent 78%);
+  pointer-events: none;
+}
+
+.home-cursor-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at var(--cursor-x) var(--cursor-y), rgba(255, 255, 255, 0.52), transparent 30%);
+  mix-blend-mode: screen;
+  z-index: 1;
+}
+
+.home-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.home-particle {
+  position: absolute;
+  bottom: -18px;
+  width: 8px;
+  height: 8px;
   border-radius: 9999px;
-  animation: homeFloat 8s ease-in-out infinite;
+  background: rgba(22, 163, 74, 0.35);
+  animation-name: particleRise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
 
-.home-blob-left {
-  left: -60px;
-  top: -40px;
-  width: 180px;
-  height: 180px;
-  background: rgba(74, 222, 128, 0.35);
+.home-particle:nth-child(3n) {
+  width: 6px;
+  height: 6px;
+  background: rgba(16, 185, 129, 0.3);
 }
 
-.home-blob-right {
-  right: -30px;
-  bottom: -50px;
-  width: 220px;
-  height: 220px;
-  background: rgba(34, 197, 94, 0.25);
-  animation-delay: 1.2s;
+.home-particle:nth-child(4n) {
+  width: 10px;
+  height: 10px;
+  background: rgba(34, 197, 94, 0.26);
 }
 
-.home-enter-up {
-  animation: homeEnterUp 550ms ease-out both;
+.reveal {
+  opacity: 0;
+  transform: translateY(22px) scale(0.985);
+  transition: opacity 560ms ease, transform 560ms ease;
 }
 
-.home-enter-delay {
-  animation-delay: 120ms;
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .home-feature-item {
@@ -82,49 +111,147 @@ body {
   box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
 }
 
-.home-mini-card {
+.home-side-panel {
+  border: 1px solid rgba(134, 239, 172, 0.6);
+  background: rgba(255, 255, 255, 0.74);
+  border-radius: 1rem;
+  padding: 1.35rem;
+  backdrop-filter: blur(7px);
+}
+
+.home-mini-card-advanced {
   border: 1px solid rgba(134, 239, 172, 0.55);
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.82);
   border-radius: 0.9rem;
-  padding: 0.9rem;
-  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+  padding: 0.95rem;
+  transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
 }
 
-.home-mini-card:hover {
-  transform: translateY(-3px);
+.home-mini-card-advanced:hover {
+  transform: translateY(-4px) scale(1.01);
   background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 8px 20px rgba(22, 101, 52, 0.14);
+  box-shadow: 0 10px 24px rgba(22, 101, 52, 0.15);
 }
 
-.home-stat-card {
+.home-stat-xxl {
   border: 1px solid rgba(134, 239, 172, 0.55);
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.8);
   border-radius: 0.8rem;
-  padding: 0.7rem 0.75rem;
-  transition: transform 180ms ease;
+  padding: 0.85rem 0.9rem;
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
-.home-stat-card:hover {
-  transform: translateY(-2px);
+.home-stat-xxl:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(22, 101, 52, 0.12);
 }
 
-@keyframes homeFloat {
-  0%,
-  100% {
-    transform: translateY(0);
+.ripple-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.ripple-btn::after {
+  content: "";
+  position: absolute;
+  left: var(--ripple-x, 50%);
+  top: var(--ripple-y, 50%);
+  width: 0;
+  height: 0;
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.38);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.ripple-btn.is-rippling::after {
+  animation: rippleBurst 620ms ease-out;
+}
+
+@keyframes heroGradientShift {
+  0% {
+    background-position: 0% 50%;
   }
   50% {
-    transform: translateY(12px);
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
 
-@keyframes homeEnterUp {
-  from {
+@keyframes particleRise {
+  0% {
+    transform: translateY(0) scale(1);
     opacity: 0;
-    transform: translateY(16px);
+  }
+  12% {
+    opacity: 1;
+  }
+  82% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-540px) scale(0.7);
+    opacity: 0;
+  }
+}
+
+@keyframes rippleBurst {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  100% {
+    width: 320px;
+    height: 320px;
+    opacity: 0;
+  }
+}
+
+.loader-orbit {
+  width: 58px;
+  height: 58px;
+  position: relative;
+}
+
+.loader-orbit-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 3px solid rgba(34, 197, 94, 0.25);
+  border-top-color: rgba(22, 101, 52, 0.9);
+  animation: loaderSpin 0.85s linear infinite;
+}
+
+.loader-orbit-core {
+  position: absolute;
+  inset: 14px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a);
+  animation: loaderPulse 1.3s ease-in-out infinite;
+}
+
+@keyframes loaderSpin {
+  from {
+    transform: rotate(0deg);
   }
   to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loaderPulse {
+  0%,
+  100% {
+    transform: scale(1);
     opacity: 1;
-    transform: translateY(0);
+  }
+  50% {
+    transform: scale(0.82);
+    opacity: 0.75;
   }
 }

@@ -13,8 +13,16 @@ function App() {
 
   if (initializing) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-rescue-gray text-slate-700">
-        Loading session...
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-rescue-gray px-4">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,197,94,0.14),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(22,101,52,0.14),transparent_30%)]" />
+        <div className="relative z-10 flex w-full max-w-sm flex-col items-center rounded-2xl border border-green-100 bg-white/90 px-6 py-8 shadow-panel backdrop-blur">
+          <div className="loader-orbit mb-4" aria-hidden="true">
+            <span className="loader-orbit-ring" />
+            <span className="loader-orbit-core" />
+          </div>
+          <p className="text-sm font-semibold tracking-wide text-rescue-dark">Preparing your workspace...</p>
+          <p className="mt-1 text-xs text-slate-500">Syncing secure Firebase session</p>
+        </div>
       </div>
     );
   }
