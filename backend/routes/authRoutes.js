@@ -1,7 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { users } = require("../data/db");
+const { query } = require("../data/postgres");
 const { authenticateToken } = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -19,23 +19,23 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Invalid role selected." });
     }
 
-    const existingUser = users.find((user) => user.email === email.toLowerCase());
-    if (existingUser) {
+    const normalizedEmail = email.toLowerCase();
+    const existingUser = await query("SELECT id FROM users WHERE email = $1", [normalizedEmail]);
+    if (existingUser.rowCount > 0) {
       return res.status(409).json({ message: "User already exists." });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const created = await query(
+      `
+      INSERT INTO users (name, email, password_hash, role)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, name, email, role
+      `,
+      [name, normalizedEmail, passwordHash, role]
+    );
 
-    const user = {
-      id: Date.now().toString(),
-      name,
-      email: email.toLowerCase(),
-      passwordHash,
-      role,
-      createdAt: new Date().toISOString(),
-    };
-
-    users.push(user);
+    const user = created.rows[0];
 
     return res.status(201).json({
       message: "Registration successful.",
@@ -59,13 +59,15 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Email and password are required." });
     }
 
-    const user = users.find((item) => item.email === email.toLowerCase());
-
-    if (!user) {
+    const normalizedEmail = email.toLowerCase();
+    const lookup = await query("SELECT * FROM users WHERE email = $1", [normalizedEmail]);
+    if (lookup.rowCount === 0) {
       return res.status(401).json({ message: "Invalid credentials." });
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    const user = lookup.rows[0];
+
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
 
     if (!isValidPassword) {
       return res.status(401).json({ message: "Invalid credentials." });
