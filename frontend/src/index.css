@@ -28,7 +28,6 @@ body {
   --cursor-y: 50%;
   background: linear-gradient(130deg, #f0fdf4, #dcfce7, #bbf7d0, #ecfeff);
   background-size: 250% 250%;
-  border: 1px solid rgba(134, 239, 172, 0.45);
   animation: heroGradientShift 12s ease-in-out infinite;
 }
 
@@ -112,17 +111,13 @@ body {
 }
 
 .home-side-panel {
-  border: 1px solid rgba(134, 239, 172, 0.6);
-  background: rgba(255, 255, 255, 0.74);
-  border-radius: 1rem;
-  padding: 1.35rem;
-  backdrop-filter: blur(7px);
+  padding: 0.2rem 0;
 }
 
 .home-mini-card-advanced {
-  border: 1px solid rgba(134, 239, 172, 0.55);
-  background: rgba(255, 255, 255, 0.82);
-  border-radius: 0.9rem;
+  border: 1px solid rgba(134, 239, 172, 0.25);
+  background: rgba(255, 255, 255, 0.28);
+  border-radius: 0.7rem;
   padding: 0.95rem;
   transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
 }
@@ -134,16 +129,16 @@ body {
 }
 
 .home-stat-xxl {
-  border: 1px solid rgba(134, 239, 172, 0.55);
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 0.8rem;
-  padding: 0.85rem 0.9rem;
+  border-left: 3px solid rgba(34, 197, 94, 0.45);
+  background: transparent;
+  border-radius: 0;
+  padding: 0.4rem 0.75rem;
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .home-stat-xxl:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(22, 101, 52, 0.12);
+  transform: translateY(-2px);
+  box-shadow: none;
 }
 
 .ripple-btn {

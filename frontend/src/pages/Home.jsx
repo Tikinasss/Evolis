@@ -115,7 +115,7 @@ function Home() {
   const particles = Array.from({ length: 22 });
 
   return (
-    <section ref={heroRef} className="home-hero-xl relative overflow-hidden rounded-[2rem] px-5 py-12 sm:px-8 md:px-12">
+    <section ref={heroRef} className="home-hero-xl relative min-h-[calc(100vh-9rem)] w-full overflow-hidden px-5 py-14 sm:px-8 md:px-12 lg:px-16">
       <div className="home-cursor-glow" />
       <div className="home-grid-overlay" />
       <div className="home-particles" aria-hidden="true">
@@ -132,7 +132,7 @@ function Home() {
         ))}
       </div>
 
-      <div className="relative z-10 grid items-center gap-10 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="reveal" data-reveal>
           <p className="mb-4 inline-flex rounded-full border border-green-200 bg-white/75 px-4 py-1.5 text-sm font-semibold text-rescue-dark backdrop-blur">
             AI TURNAROUND PLATFORM
@@ -179,7 +179,7 @@ function Home() {
         </div>
 
         <div className="space-y-4">
-          <div className="home-side-panel reveal" data-reveal>
+          <div className="reveal" data-reveal>
             <h2 className="section-title">What You Unlock</h2>
             <ul className="mt-4 space-y-3 text-slate-700">
               <li className="home-feature-item">Role-based dashboards for employee, company, and personnel teams</li>

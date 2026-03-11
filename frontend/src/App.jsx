@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -10,6 +10,8 @@ import { useAuth } from "./context/AuthContext";
 
 function App() {
   const { isAuthenticated, initializing } = useAuth();
+  const location = useLocation();
+  const isGuestHome = !isAuthenticated && location.pathname === "/";
 
   if (initializing) {
     return (
@@ -30,7 +32,13 @@ function App() {
   return (
     <div className="flex min-h-screen flex-col bg-rescue-gray text-slate-900">
       <Navbar />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+      <main
+        className={
+          isGuestHome
+            ? "w-full flex-1"
+            : "mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8"
+        }
+      >
         <Routes>
           <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Home />} />
           <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
