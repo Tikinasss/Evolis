@@ -49,10 +49,17 @@ function Register() {
     try {
       const credential = await signInWithPopup(firebaseAuth, googleProvider);
       const idToken = await credential.user.getIdToken();
-      await registerFirebaseProfile(
-        { name: credential.user.displayName || credential.user.email, role: googleRole },
-        idToken
-      );
+
+      // Do not block successful Google auth on transient backend sync errors.
+      try {
+        await registerFirebaseProfile(
+          { name: credential.user.displayName || credential.user.email, role: googleRole },
+          idToken
+        );
+      } catch (_syncError) {
+        // Intentionally ignored. Session completion still proceeds via Firebase auth state.
+      }
+
       await auth.completeFirebaseSession();
       navigate("/dashboard");
     } catch (err) {

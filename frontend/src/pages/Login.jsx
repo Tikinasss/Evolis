@@ -32,10 +32,18 @@ function Login() {
     try {
       const credential = await signInWithPopup(firebaseAuth, googleProvider);
       const idToken = await credential.user.getIdToken();
-      await registerFirebaseProfile(
-        { name: credential.user.displayName || credential.user.email, role: "employee" },
-        idToken
-      );
+
+      // Profile sync can fail transiently (API cold start/network) while Firebase auth already succeeded.
+      // Keep login flow successful and let AuthContext fallback complete the session.
+      try {
+        await registerFirebaseProfile(
+          { name: credential.user.displayName || credential.user.email, role: "employee" },
+          idToken
+        );
+      } catch (_syncError) {
+        // Intentionally ignored to prevent a misleading "Request failed" flash on the login page.
+      }
+
       await auth.completeFirebaseSession();
       navigate("/dashboard");
     } catch (err) {
