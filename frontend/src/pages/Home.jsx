@@ -115,7 +115,7 @@ function Home() {
   const particles = Array.from({ length: 22 });
 
   return (
-    <section ref={heroRef} className="home-hero-xl relative min-h-[calc(100vh-9rem)] w-full overflow-hidden px-5 py-14 sm:px-8 md:px-12 lg:px-16">
+    <section ref={heroRef} className="home-hero-xl relative min-h-[calc(100vh-4.75rem)] w-full overflow-hidden px-5 py-14 sm:px-8 md:px-12 lg:px-16">
       <div className="home-cursor-glow" />
       <div className="home-grid-overlay" />
       <div className="home-particles" aria-hidden="true">
