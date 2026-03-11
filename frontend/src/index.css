@@ -31,6 +31,69 @@ body {
   animation: heroGradientShift 12s ease-in-out infinite;
 }
 
+.partner-hero {
+  background: linear-gradient(125deg, #ecfeff, #dcfce7, #bbf7d0, #f0fdf4);
+  background-size: 230% 230%;
+  animation: heroGradientShift 11s ease-in-out infinite;
+}
+
+.partner-chip {
+  display: inline-flex;
+  border-radius: 9999px;
+  border: 1px solid rgba(134, 239, 172, 0.8);
+  background: rgba(255, 255, 255, 0.75);
+  padding: 0.38rem 0.9rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: #166534;
+}
+
+.partner-logo-shell {
+  border: 1px solid rgba(134, 239, 172, 0.48);
+  border-radius: 1.2rem;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 14px 36px rgba(22, 101, 52, 0.14);
+  padding: 1.1rem;
+  animation: partnerFloat 5.5s ease-in-out infinite;
+}
+
+.partner-logo {
+  width: 100%;
+  border-radius: 0.9rem;
+  object-fit: contain;
+}
+
+.partner-kpi {
+  border-left: 3px solid rgba(34, 197, 94, 0.45);
+  background: rgba(255, 255, 255, 0.36);
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.sponsor-card {
+  border: 1px solid rgba(134, 239, 172, 0.4);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 1rem;
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.sponsor-card:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 24px rgba(22, 101, 52, 0.15);
+}
+
+.terms-block {
+  border: 1px solid rgba(134, 239, 172, 0.42);
+  border-left: 4px solid rgba(34, 197, 94, 0.55);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.74);
+  padding: 1rem 1.05rem;
+  backdrop-filter: blur(4px);
+}
+
 .home-grid-overlay {
   position: absolute;
   inset: 0;
@@ -204,6 +267,16 @@ body {
     width: 320px;
     height: 320px;
     opacity: 0;
+  }
+}
+
+@keyframes partnerFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
   }
 }
 

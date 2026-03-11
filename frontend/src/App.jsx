@@ -3,6 +3,9 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
+import Partners from "./pages/Partners";
+import Sponsors from "./pages/Sponsors";
+import Terms from "./pages/Terms";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -11,7 +14,11 @@ import { useAuth } from "./context/AuthContext";
 function App() {
   const { isAuthenticated, initializing } = useAuth();
   const location = useLocation();
-  const isGuestHome = !isAuthenticated && location.pathname === "/";
+  const isFullBleedPage =
+    (!isAuthenticated && location.pathname === "/") ||
+    location.pathname === "/partners" ||
+    location.pathname === "/sponsors" ||
+    location.pathname === "/terms";
 
   if (initializing) {
     return (
@@ -34,13 +41,16 @@ function App() {
       <Navbar />
       <main
         className={
-          isGuestHome
+          isFullBleedPage
             ? "w-full flex-1"
             : "mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8"
         }
       >
         <Routes>
           <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Home />} />
+          <Route path="/partners" element={<Partners />} />
+          <Route path="/sponsors" element={<Sponsors />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
           <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />} />
           <Route

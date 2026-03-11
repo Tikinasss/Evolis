@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 function Footer() {
   const location = useLocation();
@@ -12,21 +12,21 @@ function Footer() {
             Contact Support
           </a>
           <span className="text-slate-300">•</span>
-          <a href="/register" className="transition hover:text-rescue-dark">
+          <Link to="/register" className="transition hover:text-rescue-dark">
             Collaboration
-          </a>
+          </Link>
           <span className="text-slate-300">•</span>
-          <a href="#" className="transition hover:text-rescue-dark">
+          <Link to="/sponsors" className="transition hover:text-rescue-dark">
             Sponsors
-          </a>
+          </Link>
           <span className="text-slate-300">•</span>
-          <a href="#" className="transition hover:text-rescue-dark">
+          <Link to="/partners" className="transition hover:text-rescue-dark">
             Partners
-          </a>
+          </Link>
           <span className="text-slate-300">•</span>
-          <a href="#" className="transition hover:text-rescue-dark">
+          <Link to="/terms" className="transition hover:text-rescue-dark">
             Terms
-          </a>
+          </Link>
         </div>
 
         <div className="flex w-full flex-col gap-2 border-t border-green-100 pt-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
