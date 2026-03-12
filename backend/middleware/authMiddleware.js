@@ -35,8 +35,25 @@ async function authenticateToken(req, res, next) {
     const firebaseAdmin = getFirebaseAdmin();
 
     if (firebaseAdmin) {
+      let decodedFirebase;
       try {
-        const decodedFirebase = await firebaseAdmin.auth().verifyIdToken(token);
+        decodedFirebase = await firebaseAdmin.auth().verifyIdToken(token);
+      } catch (firebaseError) {
+        console.error("[auth] Firebase token verification failed", {
+          code: firebaseError.code,
+          message: firebaseError.message,
+          path: req.path,
+          method: req.method,
+        });
+        // Token is not a valid Firebase token — fall through to legacy JWT.
+        console.warn("[auth] Falling back to legacy JWT verification after Firebase verification failure", {
+          path: req.path,
+          method: req.method,
+        });
+        decodedFirebase = null;
+      }
+
+      if (decodedFirebase) {
         const dbUser = await resolveUserFromDatabase({
           firebaseUid: decodedFirebase.uid,
           email: decodedFirebase.email ? decodedFirebase.email.toLowerCase() : null,
@@ -55,18 +72,6 @@ async function authenticateToken(req, res, next) {
         };
         req.authProvider = "firebase";
         return next();
-      } catch (firebaseError) {
-        console.error("[auth] Firebase token verification failed", {
-          code: firebaseError.code,
-          message: firebaseError.message,
-          path: req.path,
-          method: req.method,
-        });
-        // Fall through to legacy JWT verification for backward compatibility.
-        console.warn("[auth] Falling back to legacy JWT verification after Firebase verification failure", {
-          path: req.path,
-          method: req.method,
-        });
       }
     } else {
       console.warn("[auth] Firebase Admin unavailable, using legacy JWT verification", {
