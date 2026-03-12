@@ -63,7 +63,16 @@ async function authenticateToken(req, res, next) {
           method: req.method,
         });
         // Fall through to legacy JWT verification for backward compatibility.
+        console.warn("[auth] Falling back to legacy JWT verification after Firebase verification failure", {
+          path: req.path,
+          method: req.method,
+        });
       }
+    } else {
+      console.warn("[auth] Firebase Admin unavailable, using legacy JWT verification", {
+        path: req.path,
+        method: req.method,
+      });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret");

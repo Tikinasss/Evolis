@@ -9,6 +9,18 @@ function getFirebaseAdmin() {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY;
 
+  console.info("[auth] Firebase env check", {
+    hasProjectId: Boolean(projectId),
+    projectId: projectId || "(empty)",
+    hasClientEmail: Boolean(clientEmail),
+    hasPrivateKey: Boolean(privateKeyRaw),
+    privateKeyLength: privateKeyRaw ? privateKeyRaw.length : 0,
+    privateKeyHasBegin: privateKeyRaw ? privateKeyRaw.includes("-----BEGIN PRIVATE KEY-----") : false,
+    privateKeyHasEnd: privateKeyRaw ? privateKeyRaw.includes("-----END PRIVATE KEY-----") : false,
+    privateKeyHasEscapedNewlines: privateKeyRaw ? privateKeyRaw.includes("\\n") : false,
+    privateKeyHasRealNewlines: privateKeyRaw ? privateKeyRaw.includes("\n") : false,
+  });
+
   if (!projectId || !clientEmail || !privateKeyRaw) {
     console.warn("[auth] Firebase Admin disabled: missing FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, or FIREBASE_PRIVATE_KEY");
     return null;
