@@ -23,7 +23,7 @@ function toQueryString(params = {}) {
 async function handleResponse(response) {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data.message || "Request failed");
+    throw new Error(data.error || data.message || "Request failed");
   }
   return data;
 }

@@ -1,12 +1,30 @@
 const { BedrockRuntimeClient, ConverseCommand } = require("@aws-sdk/client-bedrock-runtime");
 
-const bedrockClient = new BedrockRuntimeClient({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+let bedrockClient;
+
+function getBedrockClient() {
+  if (bedrockClient) {
+    return bedrockClient;
+  }
+
+  const region = process.env.AWS_REGION;
+  const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+
+  if (!region || !accessKeyId || !secretAccessKey) {
+    throw new Error("AWS Bedrock is not configured. Check AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY.");
+  }
+
+  bedrockClient = new BedrockRuntimeClient({
+    region,
+    credentials: {
+      accessKeyId,
+      secretAccessKey,
+    },
+  });
+
+  return bedrockClient;
+}
 
 function buildPrompt({ companyName, industry, revenueChange, debt, reviewTrend, documentText }) {
   const documentSection = documentText
@@ -31,6 +49,7 @@ function parseNovaJsonResponse(text) {
 async function analyzeBusinessWithNova(payload) {
   const prompt = buildPrompt(payload);
   const modelId = process.env.NOVA_MODEL_ID || "amazon.nova-lite-v1:0";
+  const client = getBedrockClient();
 
   const command = new ConverseCommand({
     modelId,
@@ -47,7 +66,13 @@ async function analyzeBusinessWithNova(payload) {
     },
   });
 
-  const response = await bedrockClient.send(command);
+  let response;
+  try {
+    response = await client.send(command);
+  } catch (error) {
+    const details = [error.name, error.Code || error.code, error.message].filter(Boolean).join(" | ");
+    throw new Error(`Bedrock request failed (${details}). Check AWS region, Bedrock model access, and IAM permissions.`);
+  }
   const content = response.output?.message?.content || [];
   const text = content
     .filter((part) => typeof part.text === "string")
