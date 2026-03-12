@@ -10,18 +10,29 @@ function getFirebaseAdmin() {
   const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY;
 
   if (!projectId || !clientEmail || !privateKeyRaw) {
+    console.warn("[auth] Firebase Admin disabled: missing FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, or FIREBASE_PRIVATE_KEY");
     return null;
   }
 
   const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
 
-  admin.initializeApp({
-    credential: admin.credential.cert({
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey,
+      }),
+    });
+  } catch (error) {
+    console.error("[auth] Firebase Admin initialization failed", {
+      code: error.code,
+      message: error.message,
       projectId,
       clientEmail,
-      privateKey,
-    }),
-  });
+    });
+    throw error;
+  }
 
   return admin;
 }

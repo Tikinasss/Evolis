@@ -55,7 +55,13 @@ async function authenticateToken(req, res, next) {
         };
         req.authProvider = "firebase";
         return next();
-      } catch (_firebaseError) {
+      } catch (firebaseError) {
+        console.error("[auth] Firebase token verification failed", {
+          code: firebaseError.code,
+          message: firebaseError.message,
+          path: req.path,
+          method: req.method,
+        });
         // Fall through to legacy JWT verification for backward compatibility.
       }
     }
@@ -65,6 +71,11 @@ async function authenticateToken(req, res, next) {
     req.authProvider = "jwt";
     return next();
   } catch (error) {
+    console.error("[auth] Request authentication failed", {
+      message: error.message,
+      path: req.path,
+      method: req.method,
+    });
     return res.status(403).json({ message: "Invalid or expired token." });
   }
 }
