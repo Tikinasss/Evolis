@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { getMe } from "../api/client";
+import { getMe, registerFirebaseProfile } from "../api/client";
 import { firebaseAuth } from "../firebase";
 
 const AuthContext = createContext(null);
@@ -34,7 +34,26 @@ export function AuthProvider({ children }) {
     try {
       const profile = await syncProfile(idToken);
       return { token: idToken, user: profile };
-    } catch (_error) {
+    } catch (error) {
+      const isMissingProfile = (error.message || "").includes("User profile is not registered for this Firebase account.");
+
+      if (isMissingProfile) {
+        try {
+          await registerFirebaseProfile(
+            {
+              name: currentUser.displayName || currentUser.email || "User",
+              role: "employee",
+            },
+            idToken
+          );
+
+          const profile = await syncProfile(idToken);
+          return { token: idToken, user: profile };
+        } catch (_registerError) {
+          // Continue to local fallback below.
+        }
+      }
+
       const fallbackUser = {
         id: currentUser.uid,
         name: currentUser.displayName || currentUser.email || "User",
