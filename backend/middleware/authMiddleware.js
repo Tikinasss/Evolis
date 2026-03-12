@@ -85,11 +85,21 @@ async function authenticateToken(req, res, next) {
     req.authProvider = "jwt";
     return next();
   } catch (error) {
+    const isDatabaseError = Boolean(error && (error.code || "").startsWith("42")) ||
+      /relation\s+"?.+"?\s+does\s+not\s+exist/i.test(error.message || "") ||
+      /getaddrinfo\s+ENOTFOUND/i.test(error.message || "");
+
     console.error("[auth] Request authentication failed", {
       message: error.message,
+      code: error.code,
       path: req.path,
       method: req.method,
     });
+
+    if (isDatabaseError) {
+      return res.status(500).json({ message: "Database is unavailable or not initialized." });
+    }
+
     return res.status(403).json({ message: "Invalid or expired token." });
   }
 }
