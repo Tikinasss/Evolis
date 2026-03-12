@@ -26,6 +26,7 @@ async function resolveUserFromDatabase({ firebaseUid, email }) {
 async function authenticateToken(req, res, next) {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(" ")[1];
+  const isFirebaseBootstrapRoute = req.method === "POST" && req.path === "/auth/firebase/register";
 
   if (!token) {
     return res.status(401).json({ message: "Access token is missing." });
@@ -60,6 +61,18 @@ async function authenticateToken(req, res, next) {
         });
 
         if (!dbUser) {
+          if (isFirebaseBootstrapRoute) {
+            req.user = {
+              id: null,
+              name: decodedFirebase.name || decodedFirebase.email || "User",
+              email: decodedFirebase.email ? decodedFirebase.email.toLowerCase() : null,
+              role: null,
+              firebaseUid: decodedFirebase.uid,
+            };
+            req.authProvider = "firebase";
+            return next();
+          }
+
           return res.status(403).json({ message: "User profile is not registered for this Firebase account." });
         }
 

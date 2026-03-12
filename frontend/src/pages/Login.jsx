@@ -16,7 +16,18 @@ function Login() {
     setLoading(true);
     setError("");
     try {
-      await signInWithEmailAndPassword(firebaseAuth, payload.email, payload.password);
+      const credential = await signInWithEmailAndPassword(firebaseAuth, payload.email, payload.password);
+      const idToken = await credential.user.getIdToken();
+
+      try {
+        await registerFirebaseProfile(
+          { name: credential.user.displayName || credential.user.email, role: "employee" },
+          idToken
+        );
+      } catch (_syncError) {
+        // Ignore transient profile sync errors and continue with Firebase session completion.
+      }
+
       await auth.completeFirebaseSession();
       navigate("/dashboard");
     } catch (err) {
