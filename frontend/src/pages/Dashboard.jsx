@@ -425,6 +425,14 @@ function Dashboard() {
         </div>
       </header>
 
+      {/* Privacy Notice */}
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <p className="text-sm text-blue-900">
+          🔒 <strong>Private & Secure:</strong> Your analyses are private to your account. 
+          Only you can see your analysis history, action items, and notes. Each account has its own separate workspace.
+        </p>
+      </div>
+
       {error && <p className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700">{error}</p>}
 
       {comparison && (

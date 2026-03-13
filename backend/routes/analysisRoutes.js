@@ -55,7 +55,9 @@ function buildAnalysesFilter(req) {
   const params = [];
   const where = [];
 
-  if (role === "company") {
+  // IMPORTANT: Filter by owner_user_id for all non-personnel roles
+  // Personnel can see all analyses, but company and employee only see their own
+  if (role !== "personnel") {
     params.push(id);
     where.push(`owner_user_id = $${params.length}`);
   }
@@ -104,15 +106,13 @@ function canAccessAnalysis(user, analysis) {
     return false;
   }
 
+  // Personnel can access all analyses (they manage the platform)
   if (user.role === "personnel") {
     return true;
   }
 
-  if (user.role === "company") {
-    return analysis.owner_user_id === user.id;
-  }
-
-  return true;
+  // Company and employee can only access their own analyses
+  return analysis.owner_user_id === user.id;
 }
 
 function canManageAnalysis(user, analysis) {
