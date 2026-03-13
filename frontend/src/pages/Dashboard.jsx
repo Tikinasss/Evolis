@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import BusinessForm from "../components/BusinessForm";
 import ResultCard from "../components/ResultCard";
 import HistoricalComparison from "../components/HistoricalComparison";
@@ -197,7 +198,8 @@ function Dashboard() {
     try {
       // Use regular analysis endpoint
       const data = await analyzeBusiness(payload, token);
-      setResult(data.analysis || data);
+      // Important: use analysisData which includes all the detailed fields
+      setResult(data.analysisData || data.analysis || data);
       
       // Try to get historical comparison in the background (doesn't block)
       try {
@@ -214,17 +216,17 @@ function Dashboard() {
             changes: {
               riskLevel: {
                 previous: prev.riskLevel,
-                current: data.analysis?.risk_level || 'Unknown',
+                current: data.analysisData?.risk_level || data.analysis?.risk_level || 'Unknown',
                 improved: true,
               },
               healthScore: {
                 previous: prev.healthScore,
-                current: data.analysis?.health_score || 50,
-                change: (data.analysis?.health_score || 50) - prev.healthScore,
+                current: data.analysisData?.health_score || 50,
+                change: (data.analysisData?.health_score || 50) - prev.healthScore,
               },
               mainProblems: {
                 previousCount: Array.isArray(prev.mainProblems) ? prev.mainProblems.length : 0,
-                currentCount: Array.isArray(data.analysis?.main_problems) ? data.analysis.main_problems.length : 0,
+                currentCount: Array.isArray(data.analysisData?.main_problems) ? data.analysisData.main_problems.length : 0,
                 reducedProblems: true,
                 reductionPercentage: 15,
               },
@@ -451,34 +453,104 @@ function Dashboard() {
       </div>
 
       <div className="card-surface p-6">
-        <h3 className="section-title">Business Health Score Trend</h3>
-        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-          {trendData.length === 0 && <p className="text-sm text-slate-500">No trend data yet.</p>}
-
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="section-title">Business Health Score Trend</h3>
           {trendData.length > 0 && (
+            <span className="text-sm text-slate-600">
+              {trendData.length} analyses tracked
+            </span>
+          )}
+        </div>
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+          {trendData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <p className="text-2xl mb-2">📊</p>
+              <p className="text-sm text-slate-600">No analyses yet</p>
+              <p className="text-xs text-slate-500 mt-1">Submit a business analysis to start tracking your health score trend</p>
+            </div>
+          ) : (
             <>
-              <svg viewBox="0 0 420 140" className="h-40 w-full overflow-visible">
-                <line x1="0" y1="140" x2="420" y2="140" stroke="#cbd5e1" strokeWidth="1" />
-                <polyline fill="none" stroke="#16a34a" strokeWidth="3" points={chartPoints} />
-                {trendData.map((point, idx) => {
-                  const x = trendData.length === 1 ? 0 : (idx / (trendData.length - 1)) * 420;
-                  const maxScore = Math.max(...trendData.map((p) => p.avg_score), 100);
-                  const minScore = Math.min(...trendData.map((p) => p.avg_score), 0);
-                  const range = Math.max(1, maxScore - minScore);
-                  const y = 140 - ((point.avg_score - minScore) / range) * 140;
+              {/* Summary Stats */}
+              <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div className="rounded-lg bg-blue-50 p-3">
+                  <p className="text-xs font-semibold text-blue-600">Latest Score</p>
+                  <p className="mt-1 text-2xl font-bold text-blue-900">
+                    {trendData[trendData.length - 1].avg_score}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-green-50 p-3">
+                  <p className="text-xs font-semibold text-green-600">Highest Score</p>
+                  <p className="mt-1 text-2xl font-bold text-green-900">
+                    {Math.max(...trendData.map((p) => p.avg_score))}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-orange-50 p-3">
+                  <p className="text-xs font-semibold text-orange-600">Lowest Score</p>
+                  <p className="mt-1 text-2xl font-bold text-orange-900">
+                    {Math.min(...trendData.map((p) => p.avg_score))}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-purple-50 p-3">
+                  <p className="text-xs font-semibold text-purple-600">Total Analyses</p>
+                  <p className="mt-1 text-2xl font-bold text-purple-900">
+                    {trendData.reduce((sum, p) => sum + p.total, 0)}
+                  </p>
+                </div>
+              </div>
 
-                  return (
-                    <circle key={point.day} cx={x} cy={y} r="4" fill="#166534">
-                      <title>
-                        {new Date(point.day).toLocaleDateString()} - score {point.avg_score} ({point.total} analyses)
-                      </title>
-                    </circle>
-                  );
-                })}
-              </svg>
-              <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
-                <span>{new Date(trendData[0].day).toLocaleDateString()}</span>
-                <span>{new Date(trendData[trendData.length - 1].day).toLocaleDateString()}</span>
+              {/* Chart */}
+              <div className="mt-6">
+                <p className="mb-3 text-xs font-semibold text-slate-600">TREND OVER TIME</p>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={trendData.map((point) => ({
+                    date: new Date(point.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                    score: point.avg_score,
+                    analyses: point.total,
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis 
+                      dataKey="date" 
+                      tick={{ fontSize: 12 }}
+                      stroke="#94a3b8"
+                    />
+                    <YAxis 
+                      domain={[0, 100]} 
+                      label={{ value: 'Health Score', angle: -90, position: 'insideLeft', offset: 10 }}
+                      stroke="#94a3b8"
+                      tick={{ fontSize: 12 }}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: '#f8fafc',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '8px',
+                        padding: '8px',
+                      }}
+                      formatter={(value, name) => {
+                        if (name === 'score') return [`${value}/100`, 'Health Score'];
+                        return [value, name];
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="score" 
+                      stroke="#10b981" 
+                      strokeWidth={3}
+                      dot={{ fill: '#10b981', r: 5 }}
+                      activeDot={{ r: 7 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Legend & Info */}
+              <div className="mt-4 rounded-lg bg-slate-50 p-3 text-xs text-slate-700">
+                <p>
+                  📈 <strong>Score Range:</strong> 0-100 (Higher is better)
+                </p>
+                <p className="mt-1">
+                  📅 <strong>Covered Period:</strong> {new Date(trendData[0].day).toLocaleDateString()} to {new Date(trendData[trendData.length - 1].day).toLocaleDateString()}
+                </p>
               </div>
             </>
           )}

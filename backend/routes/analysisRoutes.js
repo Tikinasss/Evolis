@@ -192,9 +192,15 @@ router.post(
           health_score,
           main_problems,
           recovery_plan,
-          recommendations
+          recommendations,
+          analysis_data,
+          financial_snapshot,
+          projections_12_months,
+          industry_benchmarks,
+          training_resources,
+          success_metrics
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, 'completed', $8, $9, $10::jsonb, $11::jsonb, $12::jsonb)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'completed', $8, $9, $10::jsonb, $11::jsonb, $12::jsonb, $13::jsonb, $14::jsonb, $15::jsonb, $16::jsonb, $17::jsonb, $18::jsonb)
         RETURNING *
         `,
         [
@@ -210,6 +216,12 @@ router.post(
           JSON.stringify(Array.isArray(analysisResult.main_problems) ? analysisResult.main_problems : []),
           JSON.stringify(Array.isArray(analysisResult.recovery_plan) ? analysisResult.recovery_plan : []),
           JSON.stringify(Array.isArray(analysisResult.recommendations) ? analysisResult.recommendations : []),
+          JSON.stringify(analysisResult),
+          JSON.stringify(analysisResult.financial_snapshot || null),
+          JSON.stringify(analysisResult.projections_12_months || null),
+          JSON.stringify(analysisResult.industry_benchmarks || null),
+          JSON.stringify(analysisResult.training_resources || null),
+          JSON.stringify(analysisResult.success_metrics || null),
         ]
       );
 
@@ -222,7 +234,10 @@ router.post(
       }
 
       const saved = mapAnalysisRow(insert.rows[0]);
-      return res.json(saved);
+      return res.json({
+        ...saved,
+        analysisData: analysisResult,
+      });
     } catch (error) {
       return res.status(500).json({
         message: "Failed to analyze business with Nova.",
