@@ -151,6 +151,30 @@ router.post(
         });
       }
 
+      // Validate that revenueChange and debt are valid numbers
+      const revenueNum = Number(revenueChange);
+      const debtNum = Number(debt);
+
+      if (isNaN(revenueNum)) {
+        return res.status(400).json({
+          message: "Revenue change must be a valid number.",
+        });
+      }
+
+      if (isNaN(debtNum) || debtNum < 0) {
+        return res.status(400).json({
+          message: "Debt must be a valid non-negative number.",
+        });
+      }
+
+      // Validate reviewTrend
+      const validTrends = ["improving", "stable", "decreasing", "negative"];
+      if (!validTrends.includes(reviewTrend.toLowerCase())) {
+        return res.status(400).json({
+          message: "Review trend must be one of: improving, stable, decreasing, or negative.",
+        });
+      }
+
       let documentText = "";
       if (req.file) {
         try {
@@ -164,8 +188,8 @@ router.post(
       const analysisResult = await analyzeBusinessWithNova({
         companyName,
         industry,
-        revenueChange,
-        debt,
+        revenueChange: revenueNum,
+        debt: debtNum,
         reviewTrend,
         documentText,
       });
@@ -173,8 +197,8 @@ router.post(
       const riskLevel = normalizeRiskLevel(analysisResult.risk_level);
       const healthScore = computeHealthScore({
         riskLevel,
-        revenueChange: Number(revenueChange),
-        debt: Number(debt),
+        revenueChange: revenueNum,
+        debt: debtNum,
       });
 
       const insert = await query(
@@ -208,8 +232,8 @@ router.post(
           req.user.role,
           companyName,
           industry,
-          Number(revenueChange),
-          Number(debt),
+          revenueNum,
+          debtNum,
           reviewTrend,
           riskLevel,
           healthScore,
