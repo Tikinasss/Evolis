@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 /**
  * Component to display comprehensive business analysis with charts and resources
@@ -226,34 +227,100 @@ export default function AnalysisDetails({ analysis }) {
           {/* Projections Chart */}
           {analysis.projections_12_months && (
             <div className="rounded-lg border border-slate-200 p-4">
-              <h3 className="mb-4 text-lg font-semibold">Financial Projections</h3>
+              <h3 className="mb-4 text-lg font-semibold">Financial Projections & Growth Trajectory</h3>
               <div className="space-y-6">
-                {/* Health Score Progression */}
+                {/* Health Score Chart */}
                 <div>
-                  <p className="mb-3 font-medium text-slate-900">Health Score Progression</p>
-                    <div className="flex items-end justify-between gap-4">
-                    {[
-                      { label: 'Month 3', value: analysis.projections_12_months.month_3?.health_score || 0 },
-                      { label: 'Month 6', value: analysis.projections_12_months.month_6?.health_score || 0 },
-                      { label: 'Month 12', value: analysis.projections_12_months.month_12?.health_score || 0 },
-                    ].map((item, idx) => (
-                      <div key={`health-${idx}`} className="flex flex-col items-center">
-                        <div
-                          className="mb-2 w-12 rounded bg-gradient-to-t from-green-500 to-green-300"
-                          style={{ height: `${Math.max(20, item.value * 1.3)}px` }}
-                        />
-                        <p className="text-xs font-semibold text-slate-900">{item.value}</p>
-                        <p className="text-xs text-slate-600">{item.label}</p>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="mb-3 font-medium text-slate-900">Health Score Progression (0-100)</p>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart
+                      data={[
+                        {
+                          period: 'Month 3',
+                          score: analysis.projections_12_months.month_3?.health_score || 0
+                        },
+                        {
+                          period: 'Month 6',
+                          score: analysis.projections_12_months.month_6?.health_score || 0
+                        },
+                        {
+                          period: 'Month 12',
+                          score: analysis.projections_12_months.month_12?.health_score || 0
+                        }
+                      ]}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="period" />
+                      <YAxis domain={[0, 100]} label={{ value: 'Health Score', angle: -90, position: 'insideLeft' }} />
+                      <Tooltip formatter={(value) => `${value}/100`} />
+                      <Line type="monotone" dataKey="score" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 6 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
 
-                {/* Projections Table */}
+                {/* Revenue Growth Chart */}
+                <div>
+                  <p className="mb-3 font-medium text-slate-900">Revenue Projection</p>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart
+                      data={[
+                        {
+                          period: 'Month 3',
+                          revenue: analysis.projections_12_months.month_3?.projected_revenue || 0
+                        },
+                        {
+                          period: 'Month 6',
+                          revenue: analysis.projections_12_months.month_6?.projected_revenue || 0
+                        },
+                        {
+                          period: 'Month 12',
+                          revenue: analysis.projections_12_months.month_12?.projected_revenue || 0
+                        }
+                      ]}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="period" />
+                      <YAxis label={{ value: 'Revenue ($)', angle: -90, position: 'insideLeft' }} />
+                      <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                      <Bar dataKey="revenue" fill="#3b82f6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Debt Reduction Chart */}
+                <div>
+                  <p className="mb-3 font-medium text-slate-900">Debt Reduction Strategy</p>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart
+                      data={[
+                        {
+                          period: 'Month 3',
+                          debt: analysis.projections_12_months.month_3?.projected_debt || 0
+                        },
+                        {
+                          period: 'Month 6',
+                          debt: analysis.projections_12_months.month_6?.projected_debt || 0
+                        },
+                        {
+                          period: 'Month 12',
+                          debt: analysis.projections_12_months.month_12?.projected_debt || 0
+                        }
+                      ]}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="period" />
+                      <YAxis label={{ value: 'Debt ($)', angle: -90, position: 'insideLeft' }} />
+                      <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                      <Bar dataKey="debt" fill="#ef4444" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Detailed Projections Table */}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-slate-200">
+                      <tr className="border-b border-slate-200 bg-slate-50">
                         <th className="px-4 py-2 text-left font-semibold text-slate-900">Period</th>
                         <th className="px-4 py-2 text-right font-semibold text-slate-900">Revenue</th>
                         <th className="px-4 py-2 text-right font-semibold text-slate-900">Debt</th>
@@ -331,97 +398,144 @@ export default function AnalysisDetails({ analysis }) {
       )}
 
       {/* Benchmarks Tab */}
-      {activeTab === 'benchmarks' && analysis.industry_benchmarks && (
-        <div className="rounded-lg border border-slate-200 p-4">
-          <h3 className="mb-4 text-lg font-semibold">Industry Benchmarks</h3>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {analysis.industry_benchmarks.average_margin && (
-              <div className="rounded-lg bg-slate-50 p-4">
-                <p className="text-xs text-slate-600">Profit Margin</p>
-                <div className="mt-2 flex items-end justify-between">
-                  <div>
-                    <p className="text-xs text-slate-500">Industry Average</p>
-                    <p className="text-lg font-semibold text-slate-900">{analysis.industry_benchmarks.average_margin}</p>
+      {activeTab === 'benchmarks' && (
+        <div className="space-y-6">
+          {analysis.industry_benchmarks ? (
+            <>
+              {/* Charts Section */}
+              <div className="space-y-6">
+                {/* Profit Margin Comparison */}
+                {(analysis.industry_benchmarks.average_margin || analysis.industry_benchmarks.company_margin) && (
+                  <div className="rounded-lg border border-slate-200 p-4">
+                    <h4 className="mb-4 text-lg font-semibold">Profit Margin Comparison</h4>
+                    <div className="overflow-x-auto">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={[
+                          {
+                            name: 'Industry Avg',
+                            value: parseFloat(analysis.industry_benchmarks.average_margin) || 0
+                          },
+                          {
+                            name: 'Your Company',
+                            value: parseFloat(analysis.industry_benchmarks.company_margin) || 0
+                          }
+                        ]}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis label={{ value: 'Margin %', angle: -90, position: 'insideLeft' }} />
+                          <Tooltip formatter={(value) => `${value}%`} />
+                          <Bar dataKey="value" fill="#10b981" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-slate-500">Your Company</p>
-                    <p className="text-lg font-semibold text-orange-600">{analysis.industry_benchmarks.company_margin || 'N/A'}</p>
+                )}
+
+                {/* Debt-to-Revenue Ratio Comparison */}
+                {(analysis.industry_benchmarks.debt_to_revenue_ratio_industry || analysis.industry_benchmarks.company_debt_ratio) && (
+                  <div className="rounded-lg border border-slate-200 p-4">
+                    <h4 className="mb-4 text-lg font-semibold">Debt-to-Revenue Ratio</h4>
+                    <div className="overflow-x-auto">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={[
+                          {
+                            name: 'Industry Std',
+                            value: parseFloat(analysis.industry_benchmarks.debt_to_revenue_ratio_industry) || 0
+                          },
+                          {
+                            name: 'Your Company',
+                            value: parseFloat(analysis.industry_benchmarks.company_debt_ratio) || 0
+                          }
+                        ]}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis label={{ value: 'Ratio (x)', angle: -90, position: 'insideLeft' }} />
+                          <Tooltip formatter={(value) => `${value}x`} />
+                          <Bar dataKey="value" fill={parseFloat(analysis.industry_benchmarks.company_debt_ratio) > parseFloat(analysis.industry_benchmarks.debt_to_revenue_ratio_industry) ? '#ef4444' : '#10b981'} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
-            )}
-            {analysis.industry_benchmarks.debt_to_revenue_ratio_industry && (
-              <div className="rounded-lg bg-slate-50 p-4">
-                <p className="text-xs text-slate-600">Debt-to-Revenue Ratio</p>
-                <div className="mt-2 flex items-end justify-between">
-                  <div>
-                    <p className="text-xs text-slate-500">Industry Standard</p>
-                    <p className="text-lg font-semibold text-slate-900">
-                      {analysis.industry_benchmarks.debt_to_revenue_ratio_industry}
-                    </p>
+
+              {/* Text Benchmarks */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {analysis.industry_benchmarks.industry_growth_rate && (
+                  <div className="rounded-lg bg-blue-50 p-4">
+                    <p className="text-xs font-semibold text-blue-600">INDUSTRY GROWTH RATE</p>
+                    <p className="mt-2 text-2xl font-bold text-blue-900">{analysis.industry_benchmarks.industry_growth_rate}</p>
+                    <p className="mt-2 text-xs text-blue-700">Typical annual growth in this industry</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-slate-500">Your Company</p>
-                    <p className="text-lg font-semibold text-red-600">{analysis.industry_benchmarks.company_debt_ratio || 'N/A'}</p>
+                )}
+                {analysis.industry_benchmarks.average_margin && (
+                  <div className="rounded-lg bg-green-50 p-4">
+                    <p className="text-xs font-semibold text-green-600">HEALTHY PROFIT MARGIN</p>
+                    <p className="mt-2 text-2xl font-bold text-green-900">{analysis.industry_benchmarks.average_margin}</p>
+                    <p className="mt-2 text-xs text-green-700">Industry standard margin benchmark</p>
                   </div>
-                </div>
+                )}
               </div>
-            )}
-            {analysis.industry_benchmarks.industry_growth_rate && (
-              <div className="rounded-lg bg-slate-50 p-4">
-                <p className="text-xs text-slate-600">Industry Growth Rate</p>
-                <p className="mt-2 text-lg font-semibold text-slate-900">
-                  {analysis.industry_benchmarks.industry_growth_rate}
-                </p>
-              </div>
-            )}
-          </div>
+            </>
+          ) : (
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center">
+              <p className="text-sm text-yellow-700">📊 Benchmark data not available yet. Ensure your analysis includes industry comparison data.</p>
+            </div>
+          )}
         </div>
       )}
 
       {/* Training Resources Tab */}
-      {activeTab === 'training' && analysis.training_resources && Array.isArray(analysis.training_resources) && (
+      {activeTab === 'training' && (
         <div className="space-y-4">
-          <p className="text-sm text-slate-600">
-            Recommended learning resources to improve your business skills and understand recovery strategies
-          </p>
-          {analysis.training_resources.map((resource, idx) => (
-            <a
-              key={`resource-${idx}-${resource.resource_name || idx}`}
-              href={resource.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block rounded-lg border border-slate-200 p-4 transition hover:border-green-500 hover:shadow-md"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-slate-900">{resource.resource_name || 'Resource'}</h4>
-                  {resource.topic && <p className="mt-1 text-sm text-slate-600">{resource.topic}</p>}
-                  {resource.relevance && <p className="mt-2 text-xs text-slate-500">{resource.relevance}</p>}
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {resource.provider && (
-                      <span className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-800">{resource.provider}</span>
-                    )}
-                    {resource.duration && (
-                      <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-700">{resource.duration}</span>
-                    )}
-                    {resource.cost && (
-                      <span
-                        className={
-                          resource.cost === 'free'
-                            ? 'rounded bg-green-100 px-2 py-1 text-xs text-green-800'
-                            : 'rounded bg-orange-100 px-2 py-1 text-xs text-orange-800'
-                        }
-                      >
-                        {resource.cost}
-                      </span>
-                    )}
+          {analysis.training_resources && Array.isArray(analysis.training_resources) && analysis.training_resources.length > 0 ? (
+            <>
+              <p className="text-sm text-slate-600">
+                💡 Recommended learning resources to improve your business skills and understand recovery strategies
+              </p>
+              {analysis.training_resources.map((resource, idx) => (
+                <a
+                  key={`resource-${idx}-${resource.resource_name || idx}`}
+                  href={resource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block rounded-lg border border-slate-200 p-4 transition hover:border-green-500 hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-slate-900">{resource.resource_name || 'Resource'}</h4>
+                      {resource.topic && <p className="mt-1 text-sm text-slate-600">📚 {resource.topic}</p>}
+                      {resource.relevance && <p className="mt-2 text-xs text-slate-500">✓ {resource.relevance}</p>}
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {resource.provider && (
+                          <span className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-800">{resource.provider}</span>
+                        )}
+                        {resource.duration && (
+                          <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-700">⏱ {resource.duration}</span>
+                        )}
+                        {resource.cost && (
+                          <span
+                            className={
+                              resource.cost === 'free'
+                                ? 'rounded bg-green-100 px-2 py-1 text-xs text-green-800'
+                                : 'rounded bg-orange-100 px-2 py-1 text-xs text-orange-800'
+                            }
+                          >
+                            💰 {resource.cost}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="ml-4 text-2xl">→</div>
                   </div>
-                </div>
-                <div className="ml-4 text-2xl">→</div>
-              </div>
-            </a>
-          ))}
+                </a>
+              ))}
+            </>
+          ) : (
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center">
+              <p className="text-sm text-yellow-700">📚 Training resources not yet available. They will appear after the first analysis.</p>
+            </div>
+          )}
         </div>
       )}
     </div>

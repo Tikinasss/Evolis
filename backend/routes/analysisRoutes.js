@@ -6,6 +6,7 @@ const { query } = require("../data/postgres");
 const { authenticateToken, authorizeRoles } = require("../middleware/authMiddleware");
 const { analyzeBusinessWithNova } = require("../services/novaService");
 const { sendHighRiskNotification } = require("../services/notificationService");
+const { getPreviousAnalyses, compareAnalyses } = require("../services/historicalDataService");
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -526,6 +527,154 @@ router.post("/analyses/:analysisId/notes", authenticateToken, async (req, res) =
     return res.status(201).json({ note: created.rows[0] });
   } catch (error) {
     return res.status(500).json({ message: "Failed to create note.", error: error.message });
+  }
+});
+
+/**
+ * Get previous analyses for a company (historical data)
+ */
+router.get("/company-history/:companyName", authenticateToken, async (req, res) => {
+  try {
+    const { companyName } = req.params;
+    const previousAnalyses = await getPreviousAnalyses(companyName, req.user.id);
+
+    return res.status(200).json({
+      companyName,
+      analysisCount: previousAnalyses.length,
+      analyses: previousAnalyses.map((analysis) => ({
+        id: analysis.id,
+        createdAt: analysis.created_at,
+        riskLevel: analysis.risk_level,
+        healthScore: analysis.health_score,
+        financialSnapshot: analysis.financial_snapshot,
+        mainProblems: analysis.main_problems,
+      })),
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to fetch company history.", error: error.message });
+  }
+});
+
+/**
+ * Compare current analysis with previous analysis
+ */
+router.post("/analyze-business/with-comparison", authenticateToken, authorizeRoles("employee", "company", "personnel"), upload.single("document"), async (req, res) => {
+  try {
+    const input = req.body;
+    const { companyName, industry, revenueChange, debt, reviewTrend } = input;
+
+    if (!companyName || !industry || revenueChange === undefined || debt === undefined || !reviewTrend) {
+      return res.status(400).json({
+        message: "companyName, industry, revenueChange, debt, and reviewTrend are required.",
+      });
+    }
+
+    let documentText = "";
+    if (req.file) {
+      try {
+        const parsed = await pdfParse(req.file.buffer);
+        documentText = (parsed.text || "").trim();
+      } catch (_parseError) {
+        documentText = "Unable to parse uploaded PDF text.";
+      }
+    }
+
+    // Get the current analysis
+    const analysisResult = await analyzeBusinessWithNova({
+      companyName,
+      industry,
+      revenueChange,
+      debt,
+      reviewTrend,
+      documentText,
+    });
+
+    const riskLevel = normalizeRiskLevel(analysisResult.risk_level);
+    const healthScore = computeHealthScore({
+      riskLevel,
+      revenueChange: Number(revenueChange),
+      debt: Number(debt),
+    });
+
+    // Get previous analysis for comparison
+    const previousAnalyses = await getPreviousAnalyses(companyName, req.user.id);
+    const previousAnalysis = previousAnalyses.length > 0 ? previousAnalyses[0] : null;
+    const comparison = compareAnalyses(analysisResult, previousAnalysis);
+
+    // Save the new analysis
+    const insert = await query(
+      `
+      INSERT INTO analyses (
+        owner_user_id,
+        owner_role,
+        company_name,
+        industry,
+        revenue_change,
+        debt,
+        review_trend,
+        status,
+        risk_level,
+        health_score,
+        main_problems,
+        recovery_plan,
+        recommendations,
+        analysis_data,
+        financial_snapshot,
+        projections_12_months,
+        industry_benchmarks,
+        training_resources,
+        success_metrics
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'completed', $8, $9, $10::jsonb, $11::jsonb, $12::jsonb, $13::jsonb, $14::jsonb, $15::jsonb, $16::jsonb, $17::jsonb, $18::jsonb)
+      RETURNING *
+      `,
+      [
+        req.user.id,
+        req.user.role,
+        companyName,
+        industry,
+        revenueChange,
+        debt,
+        reviewTrend,
+        riskLevel,
+        healthScore,
+        JSON.stringify(analysisResult.main_problems || []),
+        JSON.stringify(analysisResult.recovery_plan || []),
+        JSON.stringify(analysisResult.recommendations || []),
+        JSON.stringify(analysisResult),
+        JSON.stringify(analysisResult.financial_snapshot || null),
+        JSON.stringify(analysisResult.projections_12_months || null),
+        JSON.stringify(analysisResult.industry_benchmarks || null),
+        JSON.stringify(analysisResult.training_resources || null),
+        JSON.stringify(analysisResult.success_metrics || null),
+      ]
+    );
+
+    if (!insert.rows.length) {
+      return res.status(500).json({ message: "Failed to save analysis." });
+    }
+
+    const analysisId = insert.rows[0].id;
+
+    if (riskLevel === "High") {
+      await sendHighRiskNotification({
+        companyName,
+        riskLevel,
+        mainProblems: analysisResult.main_problems,
+        userId: req.user.id,
+        userName: req.user.name,
+      });
+    }
+
+    return res.status(201).json({
+      message: "Analysis completed with historical comparison.",
+      analysis: mapAnalysisRow(insert.rows[0]),
+      analysisData: analysisResult,
+      comparison,
+    });
+  } catch (error) {
+    console.error("[ANALYSIS ROUTE] Error:", error);
+    return res.status(500).json({ message: "Analysis failed.", error: error.message });
   }
 });
 

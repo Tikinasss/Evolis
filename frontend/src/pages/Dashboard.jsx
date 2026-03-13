@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import BusinessForm from "../components/BusinessForm";
 import ResultCard from "../components/ResultCard";
+import HistoricalComparison from "../components/HistoricalComparison";
 import TutorialGuide from "../components/TutorialGuide";
 import UserDashboard from "../components/UserDashboard";
 import {
   analyzeBusiness,
+  analyzeBusinessWithComparison,
   compareAnalyses,
   createActionItem,
   createAnalysisNote,
   getActionItems,
   getAnalyses,
   getAnalysisNotes,
+  getCompanyHistory,
   getHealthTrend,
   toggleActionItem,
   updateAnalysisStatus,
@@ -50,6 +53,7 @@ function Dashboard() {
   const [loadingAnalyses, setLoadingAnalyses] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [comparison, setComparison] = useState(null);
   const [analyses, setAnalyses] = useState([]);
   const [healthTrend, setHealthTrend] = useState([]);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState("");
@@ -188,16 +192,28 @@ function Dashboard() {
   const handleSubmit = async (payload) => {
     setLoading(true);
     setError("");
+    setComparison(null);
 
     try {
-      const data = await analyzeBusiness(payload, token);
-      setResult(data.analysis || data);
-      pushToast("Analysis generated successfully", "success");
+      const data = await analyzeBusinessWithComparison(payload, token);
+      setResult(data.analysis || data.analysisData || data);
+      setComparison(data.comparison || null);
+      pushToast("Analysis generated successfully with historical comparison", "success");
       await loadAnalyses();
       await loadHealthTrend();
     } catch (err) {
-      setError(err.message);
-      pushToast(err.message || "Analysis failed", "error");
+      // Fall back to regular analysis if comparison fails
+      try {
+        const fallbackData = await analyzeBusiness(payload, token);
+        setResult(fallbackData.analysis || fallbackData);
+        setComparison(null);
+        pushToast("Analysis generated (comparison feature unavailable)", "success");
+        await loadAnalyses();
+        await loadHealthTrend();
+      } catch (fallbackErr) {
+        setError(fallbackErr.message);
+        pushToast(fallbackErr.message || "Analysis failed", "error");
+      }
     } finally {
       setLoading(false);
     }
@@ -382,6 +398,12 @@ function Dashboard() {
       </header>
 
       {error && <p className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700">{error}</p>}
+
+      {comparison && (
+        <div className="rounded-lg">
+          <HistoricalComparison comparison={comparison} />
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div id="tutorial-form" className={`transition-all ${highlightClass("form")} ${dimClass("form")}`}>

@@ -102,6 +102,39 @@ export async function analyzeBusiness(payload, token) {
   return handleResponse(response);
 }
 
+export async function analyzeBusinessWithComparison(payload, token) {
+  const formData = new FormData();
+  formData.append("companyName", payload.companyName);
+  formData.append("industry", payload.industry);
+  formData.append("revenueChange", payload.revenueChange);
+  formData.append("debt", payload.debt);
+  formData.append("reviewTrend", payload.reviewTrend);
+
+  if (payload.document) {
+    formData.append("document", payload.document);
+  }
+
+  const response = await fetch(`${API_URL}/analyze-business/with-comparison`, {
+    method: "POST",
+    headers: {
+      ...withAuth(token),
+    },
+    body: formData,
+  });
+
+  return handleResponse(response);
+}
+
+export async function getCompanyHistory(companyName, token) {
+  const response = await fetch(`${API_URL}/company-history/${encodeURIComponent(companyName)}`, {
+    headers: {
+      ...withAuth(token),
+    },
+  });
+
+  return handleResponse(response);
+}
+
 export async function getAnalyses(token, filters = {}) {
   const response = await fetch(`${API_URL}/analyses${toQueryString(filters)}`, {
     headers: {
