@@ -50,69 +50,6 @@ function ResultCard({ result, token }) {
       result.main_problems.length > 0 &&
       typeof result.main_problems[0] === "object" &&
       result.main_problems[0]?.problem);
-    let y = 20;
-
-    doc.setFontSize(16);
-    doc.text("AI Business Rescue - Diagnostic", 14, y);
-    y += 10;
-
-    doc.setFontSize(12);
-    doc.text(`Risk Level: ${result.risk_level || "Unknown"}`, 14, y);
-    y += 8;
-
-    // Handle both old and new data formats
-    const mainProblems = Array.isArray(result.main_problems)
-      ? result.main_problems.map((item) =>
-          typeof item === "string" ? item : `${item.problem || "Unknown"}: ${item.impact || ""}`
-        )
-      : [];
-
-    const recoveryPlan = Array.isArray(result.recovery_plan)
-      ? result.recovery_plan.map((item) =>
-          typeof item === "string"
-            ? item
-            : `${item.phase || "Phase"} - ${item.focus || ""}: ${(item.actions || []).join(", ")}`
-        )
-      : [];
-
-    const recommendations = Array.isArray(result.recommendations)
-      ? result.recommendations.map((item) =>
-          typeof item === "string" ? item : `${item.recommendation || "Unknown"} (ROI: ${item.estimated_roi || "N/A"})`
-        )
-      : [];
-
-    const sections = [
-      ["Main Problems", mainProblems],
-      ["Recovery Plan", recoveryPlan],
-      ["Recommendations", recommendations],
-    ];
-
-    for (const [title, items] of sections) {
-      doc.setFont(undefined, "bold");
-      doc.text(title, 14, y);
-      y += 7;
-      doc.setFont(undefined, "normal");
-
-      if (!items.length) {
-        doc.text("- No item", 16, y);
-        y += 6;
-      } else {
-        items.forEach((item) => {
-          const lines = doc.splitTextToSize(`- ${item}`, 180);
-          doc.text(lines, 16, y);
-          y += lines.length * 6;
-        });
-      }
-
-      y += 2;
-      if (y > 265) {
-        doc.addPage();
-        y = 20;
-      }
-    }
-
-    doc.save("business-recovery-diagnostic.pdf");
-  };
 
   // If detailed structure, show enhanced view
   if (hasDetailedStructure && showDetailedView) {
