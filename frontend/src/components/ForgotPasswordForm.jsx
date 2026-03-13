@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiClient } from '../api/client';
+import { forgotPassword } from '../api/client';
 
 export default function ForgotPasswordForm() {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ export default function ForgotPasswordForm() {
     setSuccessMessage('');
 
     try {
-      const response = await apiClient.post('/forgot-password', { email });
+      const response = await forgotPassword(email);
       
       setSuccessMessage(
         'Password reset instructions have been sent to your email. Please check your inbox.'
@@ -28,7 +28,7 @@ export default function ForgotPasswordForm() {
         navigate('/login');
       }, 3000);
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'An error occurred. Please try again.');
+      setErrorMessage(error.message || 'An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }

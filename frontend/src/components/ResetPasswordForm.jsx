@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { apiClient } from '../api/client';
+import { resetPassword } from '../api/client';
 
 export default function ResetPasswordForm() {
   const navigate = useNavigate();
@@ -42,12 +42,9 @@ export default function ResetPasswordForm() {
     setIsLoading(true);
 
     try {
-      const response = await apiClient.post('/reset-password', {
-        token,
-        newPassword,
-      });
+      const response = await resetPassword(token, newPassword);
 
-      setSuccessMessage(response.data.message || 'Password reset successfully!');
+      setSuccessMessage(response.message || 'Password reset successfully!');
       setNewPassword('');
       setConfirmPassword('');
 
@@ -56,7 +53,7 @@ export default function ResetPasswordForm() {
         navigate('/login');
       }, 2000);
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'Failed to reset password. Please try again.');
+      setErrorMessage(error.message || 'Failed to reset password. Please try again.');
     } finally {
       setIsLoading(false);
     }

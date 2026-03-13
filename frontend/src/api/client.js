@@ -206,3 +206,21 @@ export async function createAnalysisNote(token, analysisId, content) {
 
   return handleResponse(response);
 }
+
+export async function forgotPassword(email) {
+  const response = await fetch(`${API_URL}/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return handleResponse(response);
+}
+
+export async function resetPassword(token, newPassword) {
+  const response = await fetch(`${API_URL}/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, newPassword }),
+  });
+  return handleResponse(response);
+}
