@@ -448,7 +448,7 @@ function Dashboard() {
           <BusinessForm onSubmit={handleSubmit} loading={loading} />
         </div>
         <div id="tutorial-result" className={`transition-all ${highlightClass("result")} ${dimClass("result")}`}>
-          <ResultCard result={result || selectedAnalysis?.analysis} />
+          <ResultCard result={result || selectedAnalysis?.analysis} token={token} />
         </div>
       </div>
 
