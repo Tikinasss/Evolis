@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const initialState = {
   email: "",
@@ -37,7 +38,7 @@ function LoginForm({ onSubmit, loading }) {
         />
       </div>
 
-      <div className="mb-5">
+      <div className="mb-2">
         <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
           Password
         </label>
@@ -50,6 +51,15 @@ function LoginForm({ onSubmit, loading }) {
           onChange={handleChange}
           className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none ring-rescue-primary focus:ring-2"
         />
+      </div>
+
+      <div className="mb-5 text-right">
+        <Link
+          to="/forgot-password"
+          className="text-sm font-medium text-rescue-primary hover:text-rescue-dark"
+        >
+          Forgot your password?
+        </Link>
       </div>
 
       <button

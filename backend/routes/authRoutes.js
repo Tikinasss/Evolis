@@ -3,6 +3,14 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { query } = require("../data/postgres");
 const { authenticateToken } = require("../middleware/authMiddleware");
+const {
+  recordFailedLogin,
+  isAccountLocked,
+  resetFailedLoginAttempts,
+  generatePasswordResetToken,
+  validateAndResetPassword,
+  FAILED_LOGIN_THRESHOLD,
+} = require("../services/passwordResetService");
 
 const router = express.Router();
 const VALID_ROLES = ["employee", "company", "personnel"];
@@ -118,6 +126,16 @@ router.post("/login", async (req, res) => {
     }
 
     const normalizedEmail = email.toLowerCase();
+
+    // Check if account is locked
+    const lockStatus = await isAccountLocked(normalizedEmail);
+    if (lockStatus.locked) {
+      return res.status(423).json({
+        message: `Account is locked due to too many failed login attempts. Please try again later or use the forgot password feature.`,
+        lockedUntil: lockStatus.lockedUntil,
+      });
+    }
+
     const lookup = await query("SELECT * FROM users WHERE email = $1", [normalizedEmail]);
     if (lookup.rowCount === 0) {
       return res.status(401).json({ message: "Invalid credentials." });
@@ -128,8 +146,16 @@ router.post("/login", async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
 
     if (!isValidPassword) {
-      return res.status(401).json({ message: "Invalid credentials." });
+      const failedAttempt = await recordFailedLogin(normalizedEmail);
+      return res.status(401).json({
+        message: `Invalid credentials. ${failedAttempt.attempts} of ${FAILED_LOGIN_THRESHOLD} attempts. Account will lock after ${FAILED_LOGIN_THRESHOLD} failed attempts.`,
+        failedAttempts: failedAttempt.attempts,
+        threshold: FAILED_LOGIN_THRESHOLD,
+      });
     }
+
+    // Password is correct, reset failed login attempts
+    await resetFailedLoginAttempts(normalizedEmail);
 
     const token = jwt.sign(
       {
@@ -175,6 +201,63 @@ router.get("/me", authenticateToken, async (req, res) => {
     return res.json({ user: profile.rows[0] });
   } catch (error) {
     return res.status(500).json({ message: "Failed to load user profile.", error: error.message });
+  }
+});
+
+/**
+ * POST /api/forgot-password
+ * Request body: { email }
+ * Generates a password reset token and sends email
+ */
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required." });
+    }
+
+    const result = await generatePasswordResetToken(email);
+
+    // Always return success message for security (don't reveal if email exists)
+    return res.json({
+      success: true,
+      message: "If an account exists with this email, a password reset link has been sent.",
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to process password reset request.", error: error.message });
+  }
+});
+
+/**
+ * POST /api/reset-password
+ * Request body: { token, newPassword }
+ * Validates token and resets the password
+ */
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "Token and new password are required." });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long." });
+    }
+
+    const result = await validateAndResetPassword(token, newPassword);
+
+    if (!result.success) {
+      return res.status(400).json({ message: result.message });
+    }
+
+    return res.json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to reset password.", error: error.message });
   }
 });
 
