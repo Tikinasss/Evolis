@@ -10,7 +10,7 @@ function NotesPanel({ analysisId, token }) {
 
   useEffect(() => {
     loadNotes();
-  }, [analysisId]);
+  }, [analysisId, token]);
 
   const loadNotes = async () => {
     if (!token || !analysisId) return;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import AnalysisDetails from "./AnalysisDetails";
 import NotesPanel from "./NotesPanel";
+import ActionChecklist from "./ActionChecklist";
 import ExportPanel from "./ExportPanel";
 import { getAnalysisNotes } from "../api/client";
 
@@ -74,7 +75,10 @@ function ResultCard({ result, token }) {
         </div>
 
         {result.id && token && (
-          <NotesPanel analysisId={result.id} token={token} />
+          <>
+            <ActionChecklist analysisId={result.id} token={token} />
+            <NotesPanel analysisId={result.id} token={token} />
+          </>
         )}
       </div>
     );
@@ -84,7 +88,7 @@ function ResultCard({ result, token }) {
   return (
     <div className="card-surface p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="section-title">🏥 Diagnostic de Récupération</h3>
+        <h3 className="section-title"> Diagnostic de Récupération</h3>
         <div className="flex items-center gap-2">
           <span className={`rounded-full px-3 py-1 text-sm font-semibold ${riskColor}`}>
             Risque: {result.risk_level}
@@ -95,7 +99,7 @@ function ResultCard({ result, token }) {
               onClick={() => setShowDetailedView(true)}
               className="rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100"
             >
-              📊 Analyse Complète
+               Analyse Complète
             </button>
           )}
           <ExportPanel result={result} notes={notes} />
@@ -123,7 +127,7 @@ function ResultCard({ result, token }) {
 
         {/* Recovery Plan Section */}
         <section>
-          <h4 className="font-semibold text-rescue-dark">📋 Plan de Récupération</h4>
+          <h4 className="font-semibold text-rescue-dark"> Plan de Récupération</h4>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
             {(result.recovery_plan || []).map((item, idx) => {
               const text =
@@ -139,7 +143,7 @@ function ResultCard({ result, token }) {
 
         {/* Recommendations Section */}
         <section>
-          <h4 className="font-semibold text-rescue-dark">💡 Recommandations</h4>
+          <h4 className="font-semibold text-rescue-dark"> Recommandations</h4>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
             {(result.recommendations || []).map((item, idx) => {
               const text =
@@ -158,7 +162,10 @@ function ResultCard({ result, token }) {
 
       {/* Notes Section for simple view */}
       {result.id && token && (
-        <NotesPanel analysisId={result.id} token={token} />
+        <>
+          <ActionChecklist analysisId={result.id} token={token} />
+          <NotesPanel analysisId={result.id} token={token} />
+        </>
       )}
     </div>
   );

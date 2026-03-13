@@ -85,6 +85,17 @@ function Dashboard() {
     [analyses, selectedAnalysisId]
   );
 
+  // Check permissions for managing actions and notes
+  const canManageChecklist = selectedAnalysis && (
+    user?.role === "personnel" || 
+    selectedAnalysis.owner_user_id === user?.id
+  );
+
+  const canWriteNotes = selectedAnalysis && (
+    user?.role === "personnel" || 
+    selectedAnalysis.owner_user_id === user?.id
+  );
+
   const pushToast = (message, tone = "success") => {
     const id = `${Date.now()}-${Math.random()}`;
     setToasts((prev) => [...prev, { id, message, tone }]);
@@ -360,10 +371,6 @@ function Dashboard() {
     }
     return false;
   };
-
-  const canManageChecklist =
-    user?.role === "personnel" || (user?.role === "company" && selectedAnalysis?.ownerUserId === user.id);
-  const canWriteNotes = canManageChecklist;
 
   const trendData = [...healthTrend].sort((a, b) => new Date(a.day) - new Date(b.day));
   const chartPoints = (() => {
