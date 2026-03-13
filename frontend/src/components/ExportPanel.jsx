@@ -91,13 +91,17 @@ function ExportPanel({ result, notes = [] }) {
       // Financial Snapshot
       if (result.financial_snapshot) {
         const finData = result.financial_snapshot;
+        const formatValue = (val) => val ? (typeof val === 'number' ? val.toLocaleString('fr-FR') : val) : "Non fourni";
         const finItems = [
-          `Chiffre d'affaires: ${finData.revenue || "N/A"} €`,
-          `Dettes: ${finData.total_debt || "N/A"} €`,
-          `Marge: ${finData.profit_margin || "N/A"}%`,
-          `Score de santé: ${finData.health_score || "N/A"}/100`,
+          `💰 Chiffre d'affaires: ${formatValue(finData.revenue)} €`,
+          `📊 Dettes totales: ${formatValue(finData.total_debt)} €`,
+          `📈 Marge brute: ${formatValue(finData.profit_margin)}%`,
+          `🏥 Score de santé: ${formatValue(finData.health_score)}/100`,
+          ...(finData.debt_ratio ? [`📉 Ratio d'endettement: ${finData.debt_ratio}`] : []),
+          ...(finData.cash_flow ? [`💵 Flux de trésorerie: ${formatValue(finData.cash_flow)} €`] : []),
+          ...(finData.operating_margin ? [`🎯 Marge opérationnelle: ${finData.operating_margin}%`] : []),
         ];
-        addSection("Vue d'ensemble Financière", finItems);
+        addSection("Vue d'ensemble Financière Complète", finItems);
       }
 
       // Recovery Plan
@@ -113,10 +117,21 @@ function ExportPanel({ result, notes = [] }) {
 
       // Projections
       if (result.projections_12_months && Array.isArray(result.projections_12_months)) {
+        if (y > 240) {
+          doc.addPage();
+          y = 20;
+        }
         const projectionItems = result.projections_12_months.map(
-          (p) => `Mois ${p.month}: Santé ${p.health_score}, Revenu ${p.revenue} €, Endettement ${p.debt} €`
+          (p) => {
+            const items = [];
+            if (p.month !== undefined) items.push(`Mois ${p.month}`);
+            if (p.health_score !== undefined) items.push(`Santé: ${p.health_score}/100`);
+            if (p.revenue !== undefined) items.push(`Revenu: ${(p.revenue || 0).toLocaleString('fr-FR')} €`);
+            if (p.debt !== undefined) items.push(`Dettes: ${(p.debt || 0).toLocaleString('fr-FR')} €`);
+            return items.join(" | ");
+          }
         );
-        addSection("Projections 12 Mois", projectionItems);
+        addSection("📊 Projections 12 Mois", projectionItems);
       }
 
       // Recommendations
@@ -228,7 +243,7 @@ function ExportPanel({ result, notes = [] }) {
       <button
         type="button"
         onClick={() => setShowMenu(!showMenu)}
-        className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+        className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700"
       >
         📥 Exporter
       </button>
