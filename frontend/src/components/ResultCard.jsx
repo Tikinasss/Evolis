@@ -57,14 +57,14 @@ function ResultCard({ result, token }) {
     return (
       <div className="card-surface p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="section-title">Analyse Complète</h3>
+          <h3 className="section-title">Complete Analysis</h3>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setShowDetailedView(false)}
               className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
             >
-              Vue Simple
+              Simple View
             </button>
             <ExportPanel result={result} notes={notes} />
           </div>
@@ -88,7 +88,7 @@ function ResultCard({ result, token }) {
   return (
     <div className="card-surface p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="section-title"> Diagnostic de Récupération</h3>
+        <h3 className="section-title"> Recovery Diagnostic</h3>
         <div className="flex items-center gap-2">
           <span className={`rounded-full px-3 py-1 text-sm font-semibold ${riskColor}`}>
             Risque: {result.risk_level}
@@ -99,7 +99,7 @@ function ResultCard({ result, token }) {
               onClick={() => setShowDetailedView(true)}
               className="rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100"
             >
-               Analyse Complète
+               Complete Analysis
             </button>
           )}
           <ExportPanel result={result} notes={notes} />
@@ -109,13 +109,13 @@ function ResultCard({ result, token }) {
       <div className="space-y-4">
         {/* Main Problems Section */}
         <section>
-          <h4 className="font-semibold text-rescue-dark">🔴 Problèmes Principaux</h4>
+          <h4 className="font-semibold text-rescue-dark">🔴 Main Problems</h4>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
             {(result.main_problems || []).map((item, idx) => {
               const text =
                 typeof item === "string"
                   ? item
-                  : `${item.problem || "Inconnu"} - Sévérité: ${item.severity || "Moyenne"}`;
+                  : `${item.problem || "Unknown"} - Severity: ${item.severity || "Medium"}`;
               return (
                 <li key={`problem-${idx}`} className="text-sm">
                   {text}
@@ -127,7 +127,7 @@ function ResultCard({ result, token }) {
 
         {/* Recovery Plan Section */}
         <section>
-          <h4 className="font-semibold text-rescue-dark"> Plan de Récupération</h4>
+          <h4 className="font-semibold text-rescue-dark"> Recovery Plan</h4>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
             {(result.recovery_plan || []).map((item, idx) => {
               const text =
@@ -143,13 +143,13 @@ function ResultCard({ result, token }) {
 
         {/* Recommendations Section */}
         <section>
-          <h4 className="font-semibold text-rescue-dark"> Recommandations</h4>
+          <h4 className="font-semibold text-rescue-dark"> Recommendations</h4>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
             {(result.recommendations || []).map((item, idx) => {
               const text =
                 typeof item === "string"
                   ? item
-                  : `${item.recommendation || "Inconnu"} (Priorité: ${item.priority || "Moyenne"})`;
+                  : `${item.recommendation || "Unknown"} (Priority: ${item.priority || "Medium"})`;
               return (
                 <li key={`recommendation-${idx}`} className="text-sm">
                   {text}

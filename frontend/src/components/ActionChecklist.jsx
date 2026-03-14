@@ -21,7 +21,7 @@ function ActionChecklist({ analysisId, token }) {
       setActions(response.items || []);
     } catch (err) {
       console.error("Failed to load actions:", err);
-      setError("Impossible de charger les actions");
+      setError("Failed to load actions");
     } finally {
       setLoading(false);
     }
@@ -39,7 +39,7 @@ function ActionChecklist({ analysisId, token }) {
       setError(null);
     } catch (err) {
       console.error("Failed to create action:", err);
-      setError(err.message || "Erreur lors de l'ajout de l'action");
+      setError(err.message || "Error adding action");
     } finally {
       setSubmitting(false);
     }
@@ -55,7 +55,7 @@ function ActionChecklist({ analysisId, token }) {
       );
     } catch (err) {
       console.error("Failed to toggle action:", err);
-      setError(err.message || "Erreur lors de la mise à jour");
+      setError(err.message || "Error updating action");
     }
   };
 
@@ -65,7 +65,7 @@ function ActionChecklist({ analysisId, token }) {
   return (
     <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
       <div className="flex items-center justify-between">
-        <h4 className="font-semibold text-rescue-dark">✅ Plan d'Action</h4>
+        <h4 className="font-semibold text-rescue-dark">✅ Action Plan</h4>
         {actions.length > 0 && (
           <div className="flex items-center gap-2">
             <div className="text-xs font-semibold text-slate-600">
@@ -87,7 +87,7 @@ function ActionChecklist({ analysisId, token }) {
           <input
             value={newActionTitle}
             onChange={(e) => setNewActionTitle(e.target.value)}
-            placeholder="Ajouter une action..."
+            placeholder="Add an action..."
             className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:border-rescue-main focus:outline-none"
             disabled={submitting}
           />
@@ -96,7 +96,7 @@ function ActionChecklist({ analysisId, token }) {
             disabled={!newActionTitle.trim() || submitting}
             className="rounded-lg bg-rescue-main px-3 py-2 text-xs font-semibold text-white hover:bg-rescue-dark disabled:bg-slate-300"
           >
-            {submitting ? "..." : "Ajouter"}
+            {submitting ? "Adding..." : "Add"}
           </button>
         </div>
       </form>
@@ -110,10 +110,10 @@ function ActionChecklist({ analysisId, token }) {
       {/* Actions List */}
       <div className="space-y-2">
         {loading ? (
-          <p className="text-sm text-slate-500">Chargement des actions...</p>
+          <p className="text-sm text-slate-500">Loading actions...</p>
         ) : actions.length === 0 ? (
           <p className="text-sm text-slate-500 italic">
-            Aucune action pour le moment. Créez-en une pour commencer!
+            No actions yet. Create one to start!
           </p>
         ) : (
           actions.map((action) => (
@@ -136,7 +136,7 @@ function ActionChecklist({ analysisId, token }) {
               >
                 {action.title}
               </span>
-              {action.completed && <span className="text-xs text-green-600">✓ Complétée</span>}
+              {action.completed && <span className="text-xs text-green-600">✓ Completed</span>}
             </label>
           ))
         )}
@@ -146,7 +146,7 @@ function ActionChecklist({ analysisId, token }) {
       {actions.length > 0 && (
         <div className="rounded-lg bg-blue-50 p-3 text-xs text-blue-800">
           <p className="font-semibold">
-            📊 Progression: {completedCount} action(s) complétée(s) sur {actions.length}
+            📊 Progress: {completedCount} action(s) completed out of {actions.length}
             {progress === 100 && " 🎉"}
           </p>
         </div>

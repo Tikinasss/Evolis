@@ -23,7 +23,7 @@ function NotesPanel({ analysisId, token }) {
       }
     } catch (err) {
       console.error("Failed to load notes:", err);
-      setError("Impossible de charger les notes");
+      setError("Failed to load notes");
     } finally {
       setLoading(false);
     }
@@ -41,11 +41,11 @@ function NotesPanel({ analysisId, token }) {
         setNewNote("");
         setError(null);
       } else {
-        setError(response.message || "Impossible d'ajouter la note");
+        setError(response.message || "Failed to add note");
       }
     } catch (err) {
       console.error("Failed to create note:", err);
-      setError("Erreur lors de l'ajout de la note");
+      setError("Error adding note");
     } finally {
       setSubmitting(false);
     }
@@ -53,7 +53,7 @@ function NotesPanel({ analysisId, token }) {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("fr-FR", {
+    return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -64,14 +64,14 @@ function NotesPanel({ analysisId, token }) {
 
   return (
     <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
-      <h4 className="font-semibold text-rescue-dark">📝 Notes d'analyse</h4>
+      <h4 className="font-semibold text-rescue-dark">📝 Analysis Notes</h4>
 
       {/* Add Note Form */}
       <form onSubmit={handleAddNote} className="space-y-2">
         <textarea
           value={newNote}
           onChange={(e) => setNewNote(e.target.value)}
-          placeholder="Ajouter une note personnelle sur cette analyse..."
+          placeholder="Add a personal note about this analysis..."
           className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:border-rescue-main focus:outline-none"
           rows="3"
           disabled={submitting}
@@ -81,7 +81,7 @@ function NotesPanel({ analysisId, token }) {
           disabled={!newNote.trim() || submitting}
           className="rounded-lg bg-rescue-main px-3 py-1.5 text-xs font-semibold text-white hover:bg-rescue-dark disabled:bg-slate-300"
         >
-          {submitting ? "Ajout en cours..." : "Ajouter une note"}
+          {submitting ? "Adding..." : "Add note"}
         </button>
       </form>
 
@@ -94,9 +94,9 @@ function NotesPanel({ analysisId, token }) {
       {/* Notes List */}
       <div className="space-y-2">
         {loading ? (
-          <p className="text-sm text-slate-500">Chargement des notes...</p>
+          <p className="text-sm text-slate-500">Loading notes...</p>
         ) : notes.length === 0 ? (
-          <p className="text-sm text-slate-500 italic">Aucune note pour le moment. Ajoutez-en une!</p>
+          <p className="text-sm text-slate-500 italic">No notes yet. Add one!</p>
         ) : (
           notes.map((note) => (
             <div

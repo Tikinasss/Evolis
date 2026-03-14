@@ -7,17 +7,17 @@ function HealthScoreTrend({ trendData = [] }) {
     return (
       <div className="card-surface p-6">
         <div className="mb-4">
-          <h3 className="section-title">📈 Score de Santé - Progression</h3>
+          <h3 className="section-title">📈 Health Score - Progress</h3>
           <p className="mt-1 text-xs text-slate-500">
-            Suivez l'évolution de la santé financière de votre entreprise au fil du temps
+            Track how your company's financial health evolves over time
           </p>
         </div>
         <div className="mt-4 rounded-xl border border-slate-200 bg-white p-12">
           <div className="flex flex-col items-center justify-center text-center">
             <p className="text-4xl mb-3">📊</p>
-            <p className="text-sm font-semibold text-slate-700">Aucune donnée à afficher</p>
+            <p className="text-sm font-semibold text-slate-700">No data to display</p>
             <p className="text-xs text-slate-500 mt-2">
-              Soumettez une analyse commerciale pour commencer à suivre la progression
+              Submit a business analysis to start tracking progress
             </p>
           </div>
         </div>
@@ -39,9 +39,9 @@ function HealthScoreTrend({ trendData = [] }) {
   // Determine health status based on score
   const getHealthStatus = (score) => {
     if (score >= 80) return { label: "Excellent", color: "bg-green-100 text-green-700", emoji: "🟢" };
-    if (score >= 60) return { label: "Bon", color: "bg-blue-100 text-blue-700", emoji: "🔵" };
-    if (score >= 40) return { label: "Moyen", color: "bg-yellow-100 text-yellow-700", emoji: "🟡" };
-    return { label: "Critique", color: "bg-red-100 text-red-700", emoji: "🔴" };
+    if (score >= 60) return { label: "Good", color: "bg-blue-100 text-blue-700", emoji: "🔵" };
+    if (score >= 40) return { label: "Fair", color: "bg-yellow-100 text-yellow-700", emoji: "🟡" };
+    return { label: "Critical", color: "bg-red-100 text-red-700", emoji: "🔴" };
   };
 
   const healthStatus = getHealthStatus(latestScore);
@@ -52,14 +52,14 @@ function HealthScoreTrend({ trendData = [] }) {
       <div>
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="section-title">📈 Score de Santé - Progression</h3>
+            <h3 className="section-title">📈 Health Score - Progress</h3>
             <p className="mt-2 text-sm text-slate-600">
-              <strong>À quoi ça sert?</strong> Ce graphique montre comment la santé financière de votre entreprise évolue au fil du temps. 
-              Un score élevé (80+) indique une entreprise saine; un score bas (&lt;40) suggère des problèmes urgents à résoudre.
+              <strong>What does this do?</strong> This chart shows how your company's financial health evolves over time. 
+              A high score (80+) indicates a healthy company; a low score (&lt;40) suggests urgent problems to solve.
             </p>
           </div>
           <span className="text-sm text-slate-500">
-            {trendData.length} analyse(s) suivie(s)
+            {trendData.length} analysis/analyses tracked
           </span>
         </div>
       </div>
@@ -68,7 +68,7 @@ function HealthScoreTrend({ trendData = [] }) {
       <div className={`rounded-lg ${healthStatus.color} p-4 border-l-4 border-current`}>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold opacity-75">État actuel</p>
+            <p className="text-xs font-semibold opacity-75">Current Status</p>
             <p className="text-2xl font-bold mt-1">{latestScore}/100</p>
             <p className="text-xs font-semibold mt-1 opacity-75">{healthStatus.label}</p>
           </div>
@@ -76,8 +76,8 @@ function HealthScoreTrend({ trendData = [] }) {
         </div>
         {scoreDelta !== 0 && (
           <p className="mt-2 text-xs">
-            {isImproving ? "📈 Amélioration de" : "📉 Détérioration de"} {Math.abs(scoreDelta).toFixed(1)} points
-            {previousScore !== latestScore ? " par rapport à la dernière analyse" : ""}
+            {isImproving ? "📈 Improvement of" : "📉 Deterioration of"} {Math.abs(scoreDelta).toFixed(1)} points
+            {previousScore !== latestScore ? " compared to the last analysis" : ""}
           </p>
         )}
       </div>
@@ -85,36 +85,36 @@ function HealthScoreTrend({ trendData = [] }) {
       {/* Summary Stats Grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-          <p className="text-xs font-semibold text-blue-600">Score Actuel</p>
+          <p className="text-xs font-semibold text-blue-600">Current Score</p>
           <p className="mt-2 text-xl font-bold text-blue-900">{latestScore}</p>
-          <p className="text-xs text-blue-600 mt-1">Dernière analyse</p>
+          <p className="text-xs text-blue-600 mt-1">Latest analysis</p>
         </div>
 
         <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-          <p className="text-xs font-semibold text-green-600">Meilleur Score</p>
+          <p className="text-xs font-semibold text-green-600">Best Score</p>
           <p className="mt-2 text-xl font-bold text-green-900">{highestScore}</p>
-          <p className="text-xs text-green-600 mt-1">Maximum historique</p>
+          <p className="text-xs text-green-600 mt-1">Historical maximum</p>
         </div>
 
         <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
-          <p className="text-xs font-semibold text-orange-600">Score Moyen</p>
+          <p className="text-xs font-semibold text-orange-600">Average Score</p>
           <p className="mt-2 text-xl font-bold text-orange-900">{avgScore}</p>
-          <p className="text-xs text-orange-600 mt-1">Moyenne historique</p>
+          <p className="text-xs text-orange-600 mt-1">Historical average</p>
         </div>
 
         <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
           <p className="text-xs font-semibold text-purple-600">Analyses</p>
           <p className="mt-2 text-xl font-bold text-purple-900">{totalAnalyses}</p>
-          <p className="text-xs text-purple-600 mt-1">Total suivies</p>
+          <p className="text-xs text-purple-600 mt-1">Total tracked</p>
         </div>
       </div>
 
       {/* Chart Section */}
       <div className="space-y-3">
         <div>
-          <p className="text-xs font-bold text-slate-600 uppercase tracking-wide">📊 Évolution du Score</p>
+          <p className="text-xs font-bold text-slate-600 uppercase tracking-wide">📊 Score Evolution</p>
           <p className="text-xs text-slate-500 mt-1">
-            Cliquez sur le graphique pour voir les détails. Les points rouges indiquent le seuil critique (40/100).
+            Click on the chart to see details. Red points indicate the critical threshold (40/100).
           </p>
         </div>
 
@@ -122,7 +122,7 @@ function HealthScoreTrend({ trendData = [] }) {
           <ResponsiveContainer width="100%" height={350}>
             <LineChart
               data={trendData.map((point) => ({
-                date: new Date(point.day).toLocaleDateString("fr-FR", {
+                date: new Date(point.day).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
                 }),
@@ -171,7 +171,7 @@ function HealthScoreTrend({ trendData = [] }) {
               <YAxis
                 domain={[0, 100]}
                 label={{
-                  value: "Score de Santé (0-100)",
+                  value: "Health Score (0-100)",
                   angle: -90,
                   position: "insideLeft",
                   offset: 10,
@@ -210,31 +210,31 @@ function HealthScoreTrend({ trendData = [] }) {
       {/* Interpretation Guide */}
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
         <p className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">
-          📖 Comment interpréter le score?
+          📖 How to interpret the score?
         </p>
         <div className="space-y-2 text-xs text-slate-700">
           <div className="flex items-start gap-2">
             <span className="text-lg">🟢</span>
             <div>
-              <strong>80-100: Excellent</strong> - L'entreprise est saine financièrement. Continuez les bonnes pratiques.
+              <strong>80-100: Excellent</strong> - The company is financially healthy. Continue good practices.
             </div>
           </div>
           <div className="flex items-start gap-2">
             <span className="text-lg">🔵</span>
             <div>
-              <strong>60-79: Bon</strong> - L'entreprise va bien, mais il y a des domaines d'amélioration.
+              <strong>60-79: Good</strong> - The company is doing well, but there are areas for improvement.
             </div>
           </div>
           <div className="flex items-start gap-2">
             <span className="text-lg">🟡</span>
             <div>
-              <strong>40-59: Moyen</strong> - Des problèmes existent et nécessitent attention. Suivez le plan de récupération.
+              <strong>40-59: Fair</strong> - Problems exist and require attention. Follow the recovery plan.
             </div>
           </div>
           <div className="flex items-start gap-2">
             <span className="text-lg">🔴</span>
             <div>
-              <strong>&lt;40: Critique</strong> - Intervention urgente requise. Appliquez immédiatement les recommandations.
+              <strong>&lt;40: Critical</strong> - Urgent intervention required. Immediately apply recommendations.
             </div>
           </div>
         </div>
