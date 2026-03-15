@@ -166,11 +166,16 @@ function ExportPanel({ result, notes = [] }) {
         doc.setTextColor(100, 120, 150);
         doc.text(key, xPos + 3, y + 1);
 
-        // Value
+        // Value - format if it's already a string, otherwise truncate safely
+        let valueText = String(value);
+        // Only truncate if very long and doesn't look formatted
+        if (valueText.length > 25 && !valueText.includes('USD') && !valueText.includes('milliards') && !valueText.includes('millions')) {
+          valueText = valueText.substring(0, 20) + '...';
+        }
+        
         doc.setFontSize(10);
         doc.setFont(undefined, 'bold');
         doc.setTextColor(40, 40, 80);
-        const valueText = String(value).substring(0, 20);
         doc.text(valueText, xPos + 3, y + 8);
 
         col++;
