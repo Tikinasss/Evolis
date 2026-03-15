@@ -19,6 +19,29 @@ const formatCurrency = (value) => {
   }
 };
 
+/**
+ * Clean and format text by replacing absurdly large numbers/percentages with readable format
+ */
+const cleanLargeNumbers = (text) => {
+  if (!text) return text;
+  
+  // Replace absurd percentages (>10000%) with "negative trend" or "decline"
+  text = text.replace(/\b(\d{6,})%/g, (match, num) => {
+    const numVal = parseInt(num);
+    if (numVal > 10000) {
+      return 'significant decline';
+    }
+    return match;
+  });
+
+  // Format large dollar amounts (more than 1 million)
+  text = text.replace(/\$?(\d{7,})\s*(USD)?/g, (match, num) => {
+    return formatCurrency(parseInt(num));
+  });
+
+  return text;
+};
+
 function ExportPanel({ result, notes = [] }) {
   const [exportFormat, setExportFormat] = useState("pdf");
   const [exportDetails, setExportDetails] = useState("full");
@@ -215,8 +238,8 @@ function ExportPanel({ result, notes = [] }) {
         ? result.main_problems
             .map((item) =>
               typeof item === 'string'
-                ? item
-                : `${item.problem} [${item.severity || 'Medium'}]${item.impact ? ' - ' + item.impact : ''}`
+                ? cleanLargeNumbers(item)
+                : `${item.problem} [${item.severity || 'Medium'}]${item.impact ? ' - ' + cleanLargeNumbers(item.impact) : ''}`
             )
             .filter(Boolean)
         : [];
@@ -230,8 +253,8 @@ function ExportPanel({ result, notes = [] }) {
         ? result.recovery_plan
             .map((item) =>
               typeof item === 'string'
-                ? item
-                : `${item.phase || 'Phase'}: ${item.focus}${item.actions ? ' - ' + item.actions.join(', ') : ''}`
+                ? cleanLargeNumbers(item)
+                : `${item.phase || 'Phase'}: ${cleanLargeNumbers(item.focus)}${item.actions ? ' - ' + item.actions.map(a => cleanLargeNumbers(a)).join(', ') : ''}`
             )
             .filter(Boolean)
         : [];
@@ -245,8 +268,8 @@ function ExportPanel({ result, notes = [] }) {
         ? result.recommendations
             .map((item) =>
               typeof item === 'string'
-                ? item
-                : `${item.recommendation}${item.priority ? ' [' + item.priority + ']' : ''}${item.estimated_roi ? ' - ROI: ' + item.estimated_roi : ''}`
+                ? cleanLargeNumbers(item)
+                : `${cleanLargeNumbers(item.recommendation)}${item.priority ? ' [' + item.priority + ']' : ''}${item.estimated_roi ? ' - ROI: ' + item.estimated_roi : ''}`
             )
             .filter(Boolean)
         : [];
@@ -293,7 +316,7 @@ function ExportPanel({ result, notes = [] }) {
       // SIMPLE VERSION
       const mainProblems = Array.isArray(result.main_problems)
         ? result.main_problems
-            .map((item) => (typeof item === 'string' ? item : item.problem))
+            .map((item) => (typeof item === 'string' ? cleanLargeNumbers(item) : cleanLargeNumbers(item.problem)))
             .filter(Boolean)
         : [];
       
@@ -303,7 +326,7 @@ function ExportPanel({ result, notes = [] }) {
 
       const recoveryPlan = Array.isArray(result.recovery_plan)
         ? result.recovery_plan
-            .map((item) => (typeof item === 'string' ? item : `${item.phase}: ${item.focus}`))
+            .map((item) => (typeof item === 'string' ? cleanLargeNumbers(item) : cleanLargeNumbers(`${item.phase}: ${item.focus}`)))
             .filter(Boolean)
         : [];
       
@@ -313,7 +336,7 @@ function ExportPanel({ result, notes = [] }) {
 
       const recommendations = Array.isArray(result.recommendations)
         ? result.recommendations
-            .map((item) => (typeof item === 'string' ? item : item.recommendation))
+            .map((item) => (typeof item === 'string' ? cleanLargeNumbers(item) : cleanLargeNumbers(item.recommendation)))
             .filter(Boolean)
         : [];
       
@@ -352,7 +375,7 @@ function ExportPanel({ result, notes = [] }) {
 
         doc.setFont(undefined, 'normal');
         doc.setTextColor(40, 40, 40);
-        const lines = doc.splitTextToSize(note.content, 175);
+        const lines = doc.splitTextToSize(cleanLargeNumbers(note.content), 175);
         doc.text(lines, 16, y);
         y += lines.length * 3.5 + 3;
       });
