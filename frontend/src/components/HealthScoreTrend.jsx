@@ -76,13 +76,14 @@ function HealthScoreTrend({ trendData = [] }) {
         </div>
         {scoreDelta !== 0 && (
           <p className="mt-2 text-xs">
-            {isImproving ? "📈 Improvement of" : "📉 Deterioration of"} {Math.abs(scoreDelta).toFixed(1)} points
+            {isImproving ? "Improvement of" : "Deterioration of"} {Math.abs(scoreDelta).toFixed(1)} points
             {previousScore !== latestScore ? " compared to the last analysis" : ""}
           </p>
         )}
       </div>
 
-      {/* Summary Stats Grid */}
+      {/* Summary Stats Grid - Only show if there are 2+ analyses */}
+      {trendData.length >= 2 && (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
           <p className="text-xs font-semibold text-blue-600">Current Score</p>
@@ -108,8 +109,10 @@ function HealthScoreTrend({ trendData = [] }) {
           <p className="text-xs text-purple-600 mt-1">Total tracked</p>
         </div>
       </div>
+      )}
 
-      {/* Chart Section */}
+      {/* Chart Section - Only show if there are 2+ analyses for a meaningful curve */}
+      {trendData.length >= 2 && (
       <div className="space-y-3">
         <div>
           <p className="text-xs font-bold text-slate-600 uppercase tracking-wide">📊 Score Evolution</p>
@@ -206,6 +209,7 @@ function HealthScoreTrend({ trendData = [] }) {
           </ResponsiveContainer>
         </div>
       </div>
+      )}
 
       {/* Interpretation Guide */}
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
