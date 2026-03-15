@@ -142,10 +142,10 @@ function BusinessForm({ onSubmit, loading }) {
           onChange={handleChange}
           className="rounded-lg border border-slate-200 px-3 py-2 outline-none ring-rescue-primary focus:ring-2"
         >
-          <option value="improving">Improving ↗️</option>
-          <option value="stable">Stable →</option>
-          <option value="decreasing">Decreasing ↘️</option>
-          <option value="negative">Negative ↓</option>
+          <option value="improving">Improving</option>
+          <option value="stable">Stable</option>
+          <option value="decreasing">Decreasing</option>
+          <option value="negative">Negative</option>
         </select>
 
         <input
