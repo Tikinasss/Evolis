@@ -1,6 +1,24 @@
 import { useState } from "react";
 import { jsPDF } from "jspdf";
 
+/**
+ * Format large numbers with appropriate units (Billions, Millions, etc.)
+ */
+const formatCurrency = (value) => {
+  if (!value && value !== 0) return 'N/A';
+  const num = Math.abs(Number(value));
+  
+  if (num >= 1000000000) {
+    return `${(num / 1000000000).toFixed(1)} milliards USD`;
+  } else if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)} millions USD`;
+  } else if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}K USD`;
+  } else {
+    return `${num.toFixed(0)} USD`;
+  }
+};
+
 function ExportPanel({ result, notes = [] }) {
   const [exportFormat, setExportFormat] = useState("pdf");
   const [exportDetails, setExportDetails] = useState("full");
@@ -91,10 +109,11 @@ function ExportPanel({ result, notes = [] }) {
       // Financial data with emoji indicators
       const finData = result.financial_snapshot || {};
       const finItems = [
-        `🏥 Health Score: ${formatValue(finData.health_score)}/100`,
+        `🏥 Health Score: ${finData.health_score || 'N/A'}/100`,
         ...(finData.debt_ratio ? [`📉 Debt Ratio: ${finData.debt_ratio}`] : []),
-        ...(finData.cash_flow ? [`💵 Cash Flow: ${formatValue(finData.cash_flow)} €`] : []),
+        ...(finData.cash_flow ? [`💵 Cash Flow: ${formatCurrency(finData.cash_flow)}`] : []),
         ...(finData.operating_margin ? [`🎯 Operating Margin: ${finData.operating_margin}%`] : []),
+        ...(finData.current_cash_position ? [`💰 Cash Position: ${formatCurrency(finData.current_cash_position)}`] : []),
       ];
       addSection("Complete Financial Overview", finItems);
 
@@ -120,8 +139,8 @@ function ExportPanel({ result, notes = [] }) {
             const items = [];
             if (p.month !== undefined) items.push(`Month ${p.month}`);
             if (p.health_score !== undefined) items.push(`Health: ${p.health_score}/100`);
-            if (p.revenue !== undefined) items.push(`Revenue: ${(p.revenue || 0).toLocaleString('en-US')} €`);
-            if (p.debt !== undefined) items.push(`Debt: ${(p.debt || 0).toLocaleString('en-US')} €`);
+            if (p.revenue !== undefined) items.push(`Revenue: ${formatCurrency(p.revenue)}`);
+            if (p.debt !== undefined) items.push(`Debt: ${formatCurrency(p.debt)}`);
             return items.join(" | ");
           }
         );

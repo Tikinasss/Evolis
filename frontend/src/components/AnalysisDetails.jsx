@@ -2,6 +2,24 @@ import { useEffect, useState } from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 /**
+ * Format large numbers with appropriate units (Billions, Millions, etc.)
+ */
+const formatCurrency = (value) => {
+  if (!value && value !== 0) return 'N/A';
+  const num = Math.abs(Number(value));
+  
+  if (num >= 1000000000) {
+    return `$${(num / 1000000000).toFixed(1)} milliards USD`;
+  } else if (num >= 1000000) {
+    return `$${(num / 1000000).toFixed(1)} millions USD`;
+  } else if (num >= 1000) {
+    return `$${(num / 1000).toFixed(1)}K USD`;
+  } else {
+    return `$${num.toFixed(0)} USD`;
+  }
+};
+
+/**
  * Component to display comprehensive business analysis with charts and resources
  */
 export default function AnalysisDetails({ analysis }) {
@@ -91,15 +109,15 @@ export default function AnalysisDetails({ analysis }) {
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
                   <p className="text-sm font-medium text-slate-600">Cash Position</p>
-                  <p className="text-slate-900">{analysis.financial_snapshot.current_cash_position}</p>
+                  <p className="text-slate-900 font-semibold">{formatCurrency(analysis.financial_snapshot.current_cash_position)}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-600">Monthly Burn Rate</p>
-                  <p className="text-slate-900">{analysis.financial_snapshot.burn_rate}</p>
+                  <p className="text-slate-900 font-semibold">{formatCurrency(analysis.financial_snapshot.burn_rate)}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-600">Runway</p>
-                  <p className="text-slate-900">{analysis.financial_snapshot.runway_months} months</p>
+                  <p className="text-slate-900 font-semibold">{analysis.financial_snapshot.runway_months} months</p>
                 </div>
               </div>
             </div>
