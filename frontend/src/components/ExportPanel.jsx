@@ -24,22 +24,21 @@ const formatCurrency = (value) => {
  */
 const cleanLargeNumbers = (text) => {
   if (!text) return text;
-  
-  // Replace absurd percentages (>10000%) with "negative trend" or "decline"
-  text = text.replace(/\b(\d{6,})%/g, (match, num) => {
-    const numVal = parseInt(num);
-    if (numVal > 10000) {
-      return 'significant decline';
-    }
-    return match;
-  });
 
-  // Format large dollar amounts (more than 1 million)
-  text = text.replace(/\$?(\d{7,})\s*(USD)?/g, (match, num) => {
-    return formatCurrency(parseInt(num));
-  });
-
-  return text;
+  return text
+    // Replace percentages with 6+ digits with meaningful text
+    .replace(/\b(\d{6,})%/g, 'significant change')
+    // Replace large dollar amounts (7+ digits) and ensure spacing
+    .replace(/\$?(\d{7,})\s*(USD)?\s*/g, (match, num) => {
+      return formatCurrency(parseInt(num)) + ' ';
+    })
+    // Remove duplicate consecutive words (decline decline -> decline)
+    .replace(/\b(\w+)\s+\1\b/gi, '$1')
+    // Fix spacing issues where words got stuck (USDdebt -> USD debt)
+    .replace(/([A-Z]{3})([a-z])/g, '$1 $2')
+    // Clean up multiple consecutive spaces
+    .replace(/\s+/g, ' ')
+    .trim();
 };
 
 function ExportPanel({ result, notes = [] }) {
