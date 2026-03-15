@@ -6,6 +6,125 @@ const USE_MOCK_MODE = process.env.USE_MOCK_ANALYSIS === "true";
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY_MS = 1000; // 1 second
 
+/**
+ * Database of real YouTube training resources mapped by topic
+ */
+const YOUTUBE_TRAINING_RESOURCES = {
+  "Financial Management & Accounting": {
+    resource_name: "Financial Accounting Tutorial - Complete Course (5+ hours)",
+    provider: "YouTube",
+    url: "https://www.youtube.com/watch?v=1VqlG1j-rDo",
+    duration: "5 hours",
+    cost: "free",
+    relevance: "Master financial principles for business recovery"
+  },
+  "Cost Optimization": {
+    resource_name: "How to Reduce Costs and Increase Profitability",
+    provider: "YouTube",
+    url: "https://www.youtube.com/watch?v=LDRnK-yPJ5s",
+    duration: "15 minutes",
+    cost: "free",
+    relevance: "Proven strategies to eliminate waste and improve margins"
+  },
+  "Sales & Revenue Growth": {
+    resource_name: "Sales Strategies - Complete Guide to Closing Deals",
+    provider: "YouTube",
+    url: "https://www.youtube.com/watch?v=dqJnC_t87BI",
+    duration: "45 minutes",
+    cost: "free",
+    relevance: "Boost revenue through effective sales techniques"
+  },
+  "Customer Retention": {
+    resource_name: "Customer Retention Strategies - Keep Your Customers",
+    provider: "YouTube",
+    url: "https://www.youtube.com/watch?v=zMi_bCYBr4E",
+    duration: "20 minutes",
+    cost: "free",
+    relevance: "Reduce churn and increase customer lifetime value"
+  },
+  "Business Strategy": {
+    resource_name: "Business Strategy - How to Build a Winning Strategy",
+    provider: "YouTube",
+    url: "https://www.youtube.com/watch?v=hKfmMLqD-dw",
+    duration: "30 minutes",
+    cost: "free",
+    relevance: "Develop long-term strategic thinking for growth"
+  },
+  "Cash Flow Management": {
+    resource_name: "Cash Flow Management for Business Owners",
+    provider: "YouTube",
+    url: "https://www.youtube.com/watch?v=9Hj3_bfCPOE",
+    duration: "25 minutes",
+    cost: "free",
+    relevance: "Manage cash flow to ensure business survival"
+  },
+  "Debt Management": {
+    resource_name: "Reducing Debt - Strategic Debt Payoff Methods",
+    provider: "YouTube",
+    url: "https://www.youtube.com/watch?v=u9L9Cxh0xVY",
+    duration: "20 minutes",
+    cost: "free",
+    relevance: "Develop a debt reduction strategy for financial health"
+  },
+  "Operations Management": {
+    resource_name: "Operations Management Tutorial - Complete Overview",
+    provider: "YouTube",
+    url: "https://www.youtube.com/watch?v=5JX0kUlkMTE",
+    duration: "40 minutes",
+    cost: "free",
+    relevance: "Optimize operations for efficiency and effectiveness"
+  },
+  "Leadership & Management": {
+    resource_name: "Leadership Skills for Managers - Complete Training",
+    provider: "YouTube",
+    url: "https://www.youtube.com/watch?v=dBJtd1VqJ-s",
+    duration: "1 hour",
+    cost: "free",
+    relevance: "Lead your team through recovery and transformation"
+  },
+  "Marketing & Branding": {
+    resource_name: "Digital Marketing Strategy - Complete Guide",
+    provider: "YouTube",
+    url: "https://www.youtube.com/watch?v=yKF3tLKwmao",
+    duration: "45 minutes",
+    cost: "free",
+    relevance: "Improve market position and customer acquisition"
+  }
+};
+
+/**
+ * Map AI-generated training resources to real YouTube URLs
+ */
+function mapTrainingResourcesToYouTube(trainingResources) {
+  if (!Array.isArray(trainingResources)) return [];
+  
+  return trainingResources.map(resource => {
+    const topic = resource.topic || resource.resource_name || "";
+    
+    // Find matching YouTube resource
+    const youtubeResource = Object.keys(YOUTUBE_TRAINING_RESOURCES).find(key =>
+      topic.toLowerCase().includes(key.toLowerCase()) || 
+      key.toLowerCase().includes(topic.toLowerCase())
+    );
+    
+    if (youtubeResource) {
+      return {
+        ...resource,
+        ...YOUTUBE_TRAINING_RESOURCES[youtubeResource],
+        topic: resource.topic || youtubeResource
+      };
+    }
+    
+    // If no match, use a default business course
+    return {
+      ...resource,
+      provider: "YouTube",
+      url: "https://www.youtube.com/watch?v=D5jteCLgf3Q",
+      cost: "free"
+    };
+  });
+}
+
 function getBedrockClient() {
   if (bedrockClient) {
     return bedrockClient;
@@ -54,7 +173,7 @@ ANALYSIS REQUIREMENTS:
 6. Specific, actionable recommendations with expected ROI
 7. Industry benchmarks and how company compares
 8. Success metrics and KPIs to track
-9. Training and skill gap resources
+9. Training topics and skill gaps to address (URLs will be mapped automatically)
 
 Respond ONLY in this JSON format:
 {
@@ -125,13 +244,8 @@ Respond ONLY in this JSON format:
   ],
   "training_resources": [
     {
-      "topic": "skill/knowledge area",
-      "resource_name": "name of course/resource",
-      "provider": "Udemy/Coursera/LinkedIn Learning/YouTube",
-      "url": "actual working URL",
-      "duration": "course duration",
-      "cost": "free/paid",
-      "relevance": "why relevant to this business"
+      "topic": "skill/knowledge area to develop",
+      "resource_name": "course/learning topic name"
     }
   ]
 }`;
@@ -358,80 +472,40 @@ function generateMockAnalysis(payload) {
         measurement_frequency: "monthly"
       }
     ],
-    training_resources: [
+    training_resources: mapTrainingResourcesToYouTube([
       {
         topic: "Financial Management & Accounting",
-        resource_name: "Financial Analysis for Non-Financial Managers",
-        provider: "Coursera",
-        url: "https://www.coursera.org/learn/financial-management",
-        duration: "4 weeks",
-        cost: "free",
-        relevance: "Understand financial metrics and improve decision-making"
+        resource_name: "Financial Analysis for Non-Financial Managers"
       },
       {
         topic: "Cost Optimization",
-        resource_name: "Operations Management Fundamentals",
-        provider: "LinkedIn Learning",
-        url: "https://www.linkedin-learning.com/courses/operations-management-fundamentals",
-        duration: "3 hours",
-        cost: "paid",
-        relevance: "Learn to identify and eliminate inefficiencies"
+        resource_name: "Operations Management Fundamentals"
       },
       {
         topic: "Sales & Revenue Growth",
-        resource_name: "The Art of Closing Sales",
-        provider: "Udemy",
-        url: "https://www.udemy.com/course/sales-techniques-the-art-of-closing-sales/",
-        duration: "5 hours",
-        cost: "paid",
-        relevance: "Increase conversion rates and average deal size"
+        resource_name: "The Art of Closing Sales"
       },
       {
         topic: "Customer Retention",
-        resource_name: "Customer Success Management",
-        provider: "Gainsight Academy",
-        url: "https://www.gainsightacademy.com/",
-        duration: "Self-paced",
-        cost: "free",
-        relevance: "Reduce churn and improve customer lifetime value"
+        resource_name: "Customer Success Management"
       },
       {
         topic: "Business Strategy",
-        resource_name: "Strategic Thinking and Execution",
-        provider: "Coursera",
-        url: "https://www.coursera.org/learn/strategic-thinking",
-        duration: "6 weeks",
-        cost: "free",
-        relevance: "Develop comprehensive turnaround strategy"
+        resource_name: "Strategic Thinking and Execution"
       },
       {
-        topic: "Leadership During Crisis",
-        resource_name: "Leading in Times of Change",
-        provider: "LinkedIn Learning",
-        url: "https://www.linkedin-learning.com/courses/leading-in-times-of-change",
-        duration: "2 hours",
-        cost: "paid",
-        relevance: "Navigate organizational challenges and maintain team morale"
+        topic: "Leadership & Management",
+        resource_name: "Leading in Times of Change"
       },
       {
         topic: "Cash Flow Management",
-        resource_name: "Cash Flow Management for Business Owners",
-        provider: "YouTube (SCORE Mentors)",
-        url: "https://www.youtube.com/watch?v=r3CQ5HJnCcY",
-        duration: "20 minutes",
-        cost: "free",
-        relevance: "Master critical cash flow management techniques"
+        resource_name: "Cash Flow Management for Business Owners"
       },
       {
         topic: "Debt Management",
-        resource_name: "How to Manage Business Debt",
-        provider: "Small Business Administration",
-        url: "https://www.sba.gov/",
-        duration: "Self-paced",
-        cost: "free",
-        relevance: "Understand debt restructuring and negotiation strategies"
+        resource_name: "How to Manage Business Debt"
       }
-    ]
+    ])
   };
 }
 
@@ -508,11 +582,20 @@ async function analyzeBusinessWithNova(payload) {
 
       const parsed = parseNovaJsonResponse(text);
 
+      const trainingResources = mapTrainingResourcesToYouTube(
+        Array.isArray(parsed.training_resources) ? parsed.training_resources : []
+      );
+
       return {
         risk_level: parsed.risk_level || "Medium",
         main_problems: Array.isArray(parsed.main_problems) ? parsed.main_problems : [],
         recovery_plan: Array.isArray(parsed.recovery_plan) ? parsed.recovery_plan : [],
         recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : [],
+        financial_snapshot: parsed.financial_snapshot || null,
+        projections_12_months: parsed.projections_12_months || null,
+        industry_benchmarks: parsed.industry_benchmarks || null,
+        training_resources: trainingResources,
+        success_metrics: Array.isArray(parsed.success_metrics) ? parsed.success_metrics : [],
         raw_response: text,
       };
     } catch (error) {
