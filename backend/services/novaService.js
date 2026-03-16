@@ -297,12 +297,22 @@ function generateMockAnalysis(payload) {
   const estimatedCurrentRevenue = debt > 0 ? Math.round(debt / 0.3) : 500000;
   const baselineRevenue = estimatedCurrentRevenue / (1 + revenueChange / 100);
   
+  // Calculate burn rate only if revenue is declining
+  const isBurning = revenueChange < 0;
+  const monthlyBurnRate = isBurning 
+    ? Math.round((Math.abs(revenueChange) / 100) * estimatedCurrentRevenue / 12)
+    : 0;
+  
+  const runwayMonths = isBurning && monthlyBurnRate > 0
+    ? Math.max(3, Math.round(debt / monthlyBurnRate))
+    : 100; // Healthy company, no burn
+
   return {
     risk_level: riskLevel,
     financial_snapshot: {
-      current_cash_position: `Critical - Company has ${revenueChange}% revenue decline with $${debt} debt`,
-      burn_rate: `$${Math.round((Math.abs(revenueChange) / 100) * estimatedCurrentRevenue / 12)} per month`,
-      runway_months: `${Math.max(3, Math.round(debt / ((Math.abs(revenueChange) / 100) * estimatedCurrentRevenue / 12)))}`
+      current_cash_position: Math.round(debt * 0.25),
+      burn_rate: monthlyBurnRate,
+      runway_months: runwayMonths
     },
     main_problems: [
       {
